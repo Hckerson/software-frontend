@@ -1,0 +1,242 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --background: #050c14;
+    --foreground: #ffffff;
+    --background-red: #a90103;
+    --background-dark-cyan: #017885;
+    --background-shade-green: #06260f;
+}
+
+@theme inline {
+    --breakpoint-xs: 480px;
+    --color-red: var(--background-red);
+    --font-mono: var(--font-geist-mono);
+    --font-sans: var(--font-geist-sans);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --animate-springify: springify 3.5s;
+    --animate-opacify: opacify 1s ease-in;
+    --color-dark-cyan: var(--background-dark-cyan);
+    --color-shade-green: var(--background-shade-green);
+    --animate-infinite-rotate: infinite-rotate 5s linear infinite;
+
+    @keyframes infinite-rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes opacify {
+        0% {
+            scale: 0.1;
+        }
+        ,
+        50% {
+            scale: 0.5;
+        }
+        100% {
+            scale: 1;
+        }
+    }
+
+    @keyframes springify {
+        0% {
+            transform: translateX(70%);
+        }
+        60% {
+            transform: translateY(40%);
+        }
+        90% {
+            transform: translateY(55%);
+        }
+        100% {
+            transform: translateY(445%);
+        }
+    }
+}
+
+/* Fluid type scale — clamp(min, fluid, max) interpolates continuously
+   between the mobile and 2xl sizes instead of stepping at breakpoints. */
+.xxlarge-text {
+    font-size: clamp(30px, 11.02px + 5.27vw, 92px);
+    line-height: 1.1;
+}
+
+.xlarge-text {
+    font-size: clamp(24px, 9.31px + 4.08vw, 72px);
+    line-height: 1.1;
+}
+
+.large-text {
+    font-size: clamp(18px, 7.59px + 2.89vw, 52px);
+    line-height: 1.2;
+}
+
+.md-text {
+    font-size: clamp(16px, 9.88px + 1.7vw, 36px);
+}
+
+.base-text {
+    font-size: clamp(13px, 9.33px + 1.02vw, 25px);
+}
+
+.sm-text {
+    font-size: clamp(10px, 7.55px + 0.68vw, 18px);
+}
+
+.xs-text {
+    font-size: clamp(8px, 6.62px + 0.38vw, 12.5px);
+}
+
+.pad {
+    @apply p-3 md:p-4 xl:p-5;
+}
+
+.pad-x {
+    @apply px-3 md:px-4 xl:px-5;
+}
+
+.pad-y {
+    @apply py-3 md:py-4 xl:py-5;
+}
+
+.gap {
+    @apply gap-3 md:gap-4 xl:gap-5;
+}
+
+.gap-x {
+    @apply gap-x-3 md:gap-x-4 xl:gap-x-5;
+}
+
+.gap-y {
+    @apply gap-y-3 md:gap-y-4 xl:gap-y-5;
+}
+
+.large-pad {
+    @apply px-6 sm:px-10 lg:px-14 xl:px-20;
+}
+
+.md-pad {
+    @apply px-4 md:px-7 xl:px-12;
+}
+
+.large-pady {
+    @apply py-8 sm:py-12 xl:py-16;
+}
+
+.md-pady {
+    @apply py-4 md:py-8 xl:py-12;
+}
+
+.easy {
+    @apply delay-150 duration-300 ease-in-out;
+}
+
+.smooth {
+    @apply transition-all duration-300 ease-in-out;
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+}
+
+.rainbow-box {
+    background: #050c14;
+    background-clip: padding-box;
+}
+.rainbow-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: -3px;
+    border-radius: inherit;
+    background: linear-gradient(
+        45deg,
+        #2a5595,
+        #bb00c2,
+        #00c241,
+        #fa9663,
+        #f6e820,
+        #e9721d,
+        #023f42,
+        #ce07d5,
+        #03b2d1,
+        #a09612
+    );
+}
+
+.gradient-link {
+    background: linear-gradient(to right, #0f1729, #0c1426);
+    background-clip: padding-box;
+    display: relative;
+}
+
+.gradient-link::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    z-index: -1;
+    margin: -1.5px;
+    border-radius: inherit;
+    background: linear-gradient(
+        to right,
+        #6973e7,
+        #6973e780,
+        #6973e780,
+        #6973e7
+    );
+}
+
+.blue-gradient {
+    background-color: #051428;
+    background-clip: padding-box;
+}
+
+.blue-gradient::before {
+    position: absolute;
+    z-index: -1;
+    content: "";
+    inset: 0;
+    margin: -1.5px;
+    border-radius: inherit;
+    background: linear-gradient(to top, #051428, #053373);
+}
+
+.dashed-line {
+    width: 100%;
+    height: 2px;
+    background-image: repeating-linear-gradient(
+        to right,
+        #ffffff80 0 6px,
+        /* dash */ transparent 6px 12px /* space */
+    );
+}
+
+.colored-dashes::after {
+    position: absolute;
+    z-index: 10;
+    content: "";
+    inset: 0;
+    background: repeating-linear-gradient(
+        to right,
+        black 0 9px,
+        /* dash */ transparent 9px 18px /* space */
+    );
+}
+
+/* Fix browser autofill changing input background to white */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: white !important;
+}

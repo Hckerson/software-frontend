@@ -1,0 +1,14 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(npm run)",
+            "Bash(git status|log|diff)",
+            "Bash(npx next)",
+            "Bash(npx ts-node)",
+            "Glob(**/*.ts|**/*.tsx)",
+            "Grep(.)",
+            "Read(app/|components/|lib/|hooks/)",
+            "Edit(app/|components/|lib/|hooks/)"
+        ]
+    }
+}
