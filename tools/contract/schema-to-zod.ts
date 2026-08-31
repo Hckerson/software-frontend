@@ -33,9 +33,13 @@ export const zodExpression = (schema: JsonSchema): string => {
     }
 };
 
+const OPEN_OBJECT = "z.record(z.string(), z.unknown())";
+
 const objectExpression = (schema: JsonSchema): string => {
+    if (!schema.properties) return OPEN_OBJECT;
+
     const required = new Set(schema.required ?? []);
-    const entries = Object.entries(schema.properties ?? {}).map(
+    const entries = Object.entries(schema.properties).map(
         ([property, value]) => {
             const nullable = value.nullable ? ".nullable()" : "";
             const optional = required.has(property) ? "" : ".optional()";

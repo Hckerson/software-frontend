@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { openApiDocument } from "./openapi-document";
 import { routesFile, schemasFile } from "./generate-contract";
 
-const SOURCE = process.env.CONTRACT_SOURCE ?? "../nest-setup/openapi.json";
+const SOURCE = process.env.CONTRACT_SOURCE ?? "../backend/openapi.json";
 const OUTPUT_DIR = "lib/contract";
 
 const document = openApiDocument.parse(
