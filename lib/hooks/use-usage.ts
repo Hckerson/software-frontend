@@ -1,0 +1,32 @@
+import { useQuery } from "@tanstack/react-query";
+import { query } from "@/lib/api-client";
+import { routes } from "@/lib/contract/routes";
+import { queryKeys } from "@/lib/hooks/query-keys";
+import { normalizeCurrentUsage } from "@/lib/utils/usage";
+import type { UsageLimitCheck, UsageLog, UsageMetricType } from "@/lib/types";
+
+export const useCurrentUsage = (enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.usageCurrent,
+        queryFn: () => query.get<unknown>(routes.usageGetCurrentUsage()),
+        select: normalizeCurrentUsage,
+        enabled,
+        retry: false,
+    });
+
+export const useUsageHistory = (enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.usageHistory,
+        queryFn: () => query.get<UsageLog[]>(routes.usageGetUsageHistory()),
+        enabled,
+        retry: false,
+    });
+
+export const useUsageLimit = (metric: UsageMetricType, enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.usageLimit(metric),
+        queryFn: () =>
+            query.get<UsageLimitCheck>(routes.usageCheckLimit(metric)),
+        enabled,
+        retry: false,
+    });
