@@ -1,0 +1,414 @@
+/* Named Pattern Classes — Application Register */
+/* Every recurring styling combination is declared once here and referenced by name. */
+/* Responsive behaviour lives in this file only; JSX never carries a breakpoint chain. */
+
+/* ============================================
+   APPLICATION SHELL
+   ============================================ */
+
+.app-shell {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    min-height: 100vh;
+    background-color: var(--colors-background-alt);
+}
+
+.app-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    background-color: var(--colors-sidebar);
+    border-right: 1px solid var(--colors-sidebar-border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.app-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.app-content {
+    flex: 1;
+    width: 100%;
+    max-width: 90rem;
+    padding: var(--spacing-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-indices-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    background-color: var(--colors-background);
+    border-bottom: 1px solid var(--colors-border);
+}
+
+@media (max-width: 900px) {
+    .app-shell {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--colors-sidebar-border);
+    }
+
+    .app-content {
+        padding: var(--spacing-3);
+    }
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--radii-md);
+    color: var(--colors-sidebar-text);
+    font-size: var(--font-sizes-sm);
+    line-height: var(--line-heights-sm);
+    transition: all var(--durations-fast) var(--timing-functions-smooth);
+}
+
+.nav-link:hover {
+    background-color: var(--colors-sidebar-hover);
+    color: var(--colors-sidebar-text-active);
+}
+
+.nav-link[data-active="true"] {
+    background-color: var(--colors-sidebar-active);
+    color: var(--colors-sidebar-text-active);
+    font-weight: var(--font-weights-medium);
+}
+
+/* ============================================
+   AUTH SHELL
+   ============================================ */
+
+.auth-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--spacing-4);
+    background-color: var(--colors-background-alt);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 26rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding: var(--spacing-5);
+    background-color: var(--colors-background);
+    border: 1px solid var(--colors-border);
+    border-radius: var(--radii-lg);
+    box-shadow: var(--shadows-md);
+}
+
+/* ============================================
+   LAYOUT GRIDS
+   ============================================ */
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-3);
+}
+
+.meter-grid,
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-3);
+}
+
+.split-grid,
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-3);
+}
+
+@media (max-width: 1100px) {
+    .metric-grid,
+    .meter-grid,
+    .plan-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .metric-grid,
+    .meter-grid,
+    .plan-grid,
+    .split-grid,
+    .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ============================================
+   SECTION CARD
+   ============================================ */
+
+.section-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--colors-background);
+    border: 1px solid var(--colors-border);
+    border-radius: var(--radii-lg);
+    overflow: hidden;
+}
+
+.section-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    border-bottom: 1px solid var(--colors-border-light);
+}
+
+.section-card-body {
+    padding: var(--spacing-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+/* ============================================
+   USAGE METER
+   ============================================ */
+
+.usage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    background-color: var(--colors-background);
+    border: 1px solid var(--colors-border);
+    border-radius: var(--radii-lg);
+    --meter-color: var(--colors-accent);
+}
+
+.usage-meter[data-state="warning"] {
+    --meter-color: var(--colors-warning);
+}
+
+.usage-meter[data-state="exceeded"] {
+    --meter-color: var(--colors-error);
+    border-color: var(--colors-error);
+}
+
+.usage-meter-track {
+    height: var(--spacing-2);
+    width: 100%;
+    border-radius: var(--radii-full);
+    background-color: var(--colors-background-muted);
+    overflow: hidden;
+}
+
+.usage-meter-fill {
+    height: 100%;
+    border-radius: var(--radii-full);
+    background-color: var(--meter-color);
+    transition: width var(--durations-normal) var(--timing-functions-smooth);
+}
+
+.usage-meter-value {
+    font-family: var(--fonts-mono);
+    font-size: var(--font-sizes-lg);
+    line-height: var(--line-heights-h6);
+    color: var(--colors-text);
+}
+
+/* ============================================
+   STATUS PILL
+   ============================================ */
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding: 0.125rem var(--spacing-2);
+    border-radius: var(--radii-full);
+    font-size: var(--font-sizes-xs);
+    line-height: var(--line-heights-xs);
+    font-weight: var(--font-weights-medium);
+    white-space: nowrap;
+    background-color: var(--colors-background-muted);
+    color: var(--colors-text-secondary);
+}
+
+.status-pill--success {
+    background-color: var(--colors-success-light);
+    color: var(--colors-success);
+}
+
+.status-pill--warning {
+    background-color: var(--colors-warning-light);
+    color: var(--colors-warning);
+}
+
+.status-pill--error {
+    background-color: var(--colors-error-light);
+    color: var(--colors-error);
+}
+
+.status-pill--info {
+    background-color: var(--colors-info-light);
+    color: var(--colors-info);
+}
+
+/* ============================================
+   DATA TABLE
+   ============================================ */
+
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-sizes-sm);
+    line-height: var(--line-heights-sm);
+}
+
+.data-table th {
+    text-align: left;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-sizes-xs);
+    font-weight: var(--font-weights-semibold);
+    color: var(--colors-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--colors-border);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: var(--spacing-3);
+    border-bottom: 1px solid var(--colors-border-light);
+    color: var(--colors-text);
+    vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr {
+    transition: background-color var(--durations-fast)
+        var(--timing-functions-smooth);
+}
+
+.data-table tbody tr:hover {
+    background-color: var(--colors-background-alt);
+}
+
+/* ============================================
+   EMPTY / ERROR / SKELETON STATES
+   ============================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+    text-align: center;
+    padding: var(--spacing-6) var(--spacing-4);
+    color: var(--colors-text-secondary);
+}
+
+.skeleton {
+    background-color: var(--colors-background-muted);
+    border-radius: var(--radii-sm);
+    animation: skeleton-pulse var(--durations-slower)
+        var(--timing-functions-in-out) infinite;
+}
+
+@keyframes skeleton-pulse {
+    0%,
+    100% {
+        opacity: var(--opacities-100);
+    }
+
+    50% {
+        opacity: var(--opacities-40);
+    }
+}
+
+/* ============================================
+   DIALOG
+   ============================================ */
+
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-indices-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-4);
+    background-color: var(--colors-overlay);
+}
+
+.dialog-panel {
+    z-index: var(--z-indices-modal);
+    width: 100%;
+    max-width: 28rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    background-color: var(--colors-background);
+    border: 1px solid var(--colors-border);
+    border-radius: var(--radii-lg);
+    box-shadow: var(--shadows-xl);
+}
+
+/* ============================================
+   LANDING — editorial register, public route only
+   ============================================ */
+
+.landing-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-4);
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: var(--paddings-2xl) var(--spacing-4);
+}
+
+.landing-section {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: var(--spacing-8) var(--spacing-4);
+}
+
+@media (max-width: 720px) {
+    .landing-hero {
+        padding: var(--paddings-xl) var(--spacing-3);
+    }
+}

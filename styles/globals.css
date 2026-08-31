@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./components.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -155,6 +156,11 @@
     --opacity-80: var(--opacities-80);
     --opacity-90: var(--opacities-90);
     --opacity-100: var(--opacities-100);
+
+    --icon-xs: var(--icon-sizes-xs);
+    --icon-sm: var(--icon-sizes-sm);
+    --icon-md: var(--icon-sizes-md);
+    --icon-lg: var(--icon-sizes-lg);
 }
 
 *,
@@ -378,14 +384,18 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radii-md);
-    background-color: rgba(var(--metric-color-rgb), var(--icon-bg-opacity));
+    background-color: color-mix(
+        in srgb,
+        var(--metric-color) calc(var(--icon-bg-opacity) * 100%),
+        transparent
+    );
     color: var(--metric-color);
     margin-bottom: var(--spacing-2);
 }
 
 .metric-icon svg {
-    width: 18px;
-    height: 18px;
+    width: var(--icon-sizes-xs);
+    height: var(--icon-sizes-xs);
 }
 
 /* ============================================

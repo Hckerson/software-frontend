@@ -268,22 +268,102 @@
      STAT CARD & METRIC TOKENS
      ============================================ */
 
-    /* Stat Card Base */
-    --stat-card-bg: #ffffff;
-    --stat-card-border: #f1ece4;
-    --stat-card-border-hover: #e7e1d7;
-    --stat-card-padding: 2.5rem;
-    --stat-card-radius: 8px;
-    --stat-card-shadow: 0 1px 3px rgba(28, 24, 17, 0.08);
-    --stat-card-shadow-hover: 0 4px 8px rgba(28, 24, 17, 0.1);
+    /* Stat Card Base — derived, never re-declared */
+    --stat-card-bg: var(--colors-background);
+    --stat-card-border: var(--colors-border-light);
+    --stat-card-border-hover: var(--colors-border);
+    --stat-card-padding: var(--spacing-3);
+    --stat-card-radius: var(--radii-lg);
+    --stat-card-shadow: var(--shadows-sm);
+    --stat-card-shadow-hover: var(--shadows-md);
 
     /* Icon Sizing */
+    --icon-sizes-xs: 18px;
     --icon-sizes-sm: 20px;
     --icon-sizes-md: 24px;
     --icon-sizes-lg: 32px;
 
     /* Metric Icon Background Opacity */
     --icon-bg-opacity: 0.12;
+}
+
+/* ============================================
+   DARK THEME — overrides only. Every non-color
+   token (scale, spacing, motion, radii) is
+   theme-independent and inherited from :root.
+   ============================================ */
+
+.dark {
+    color-scheme: dark;
+
+    /* Primary (neutral surface tint) */
+    --colors-primary: #1a1815;
+    --colors-primary-dark: #131211;
+    --colors-primary-light: #221f1b;
+
+    /* Accent — lightened for AA contrast on dark surfaces */
+    --colors-accent: #4a9e7f;
+    --colors-accent-dark: #3d8368;
+    --colors-accent-light: #1c302a;
+
+    /* Highlight */
+    --colors-highlight: #c9a670;
+    --colors-highlight-dark: #ab8a55;
+    --colors-highlight-light: #2e2619;
+
+    /* Status Colors */
+    --colors-success: #4ea87c;
+    --colors-success-light: #17291f;
+    --colors-warning: #d29c3c;
+    --colors-warning-light: #2c2314;
+    --colors-error: #d4695c;
+    --colors-error-light: #2e1c19;
+    --colors-info: #6b8bab;
+    --colors-info-light: #1a222b;
+
+    /* Backgrounds */
+    --colors-background: #131211;
+    --colors-background-alt: #1a1815;
+    --colors-background-muted: #221f1b;
+
+    /* Text */
+    --colors-text: #f5f2ed;
+    --colors-text-secondary: #b8b1a7;
+    --colors-text-muted: #837c72;
+    --colors-text-inverse: #131211;
+
+    /* Borders */
+    --colors-border: #2e2a25;
+    --colors-border-light: #241f1b;
+    --colors-border-dark: #423c34;
+
+    /* Overlays */
+    --colors-overlay: rgba(0, 0, 0, 0.65);
+
+    /* Sidebar Colors */
+    --colors-sidebar: #0e1613;
+    --colors-sidebar-border: rgba(255, 255, 255, 0.08);
+    --colors-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --colors-sidebar-active: rgba(255, 255, 255, 0.12);
+    --colors-sidebar-text: rgba(255, 255, 255, 0.62);
+    --colors-sidebar-text-active: #ffffff;
+
+    /* Metric Type Colors */
+    --colors-metric-pipeline: #4a9e7f;
+    --colors-metric-success: #4ea87c;
+    --colors-metric-activity: #6b8bab;
+    --colors-metric-warning: #d29c3c;
+
+    /* Shadows — deeper on dark surfaces */
+    --shadows-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadows-md: 0 4px 8px rgba(0, 0, 0, 0.45);
+    --shadows-lg: 0 12px 16px rgba(0, 0, 0, 0.45);
+    --shadows-xl: 0 20px 32px rgba(0, 0, 0, 0.5);
+    --shadows-2xl: 0 30px 60px rgba(0, 0, 0, 0.55);
+
+    --shadows-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadows-elevation-2: 0 4px 8px rgba(0, 0, 0, 0.45);
+    --shadows-elevation-3: 0 12px 16px rgba(0, 0, 0, 0.45);
 }
 
 /* ============================================
