@@ -35,6 +35,25 @@ describe("schema-to-zod", () => {
         ).toBe('z.object({"avatar": z.string().nullable(),})');
     });
 
+    it("treats a property-less object as open, not empty", () => {
+        expect(zodExpression({ type: "object" })).toBe(
+            "z.record(z.string(), z.unknown())",
+        );
+        expect(
+            zodExpression({
+                type: "object",
+                properties: { limits: { type: "object" } },
+                required: ["limits"],
+            }),
+        ).toBe('z.object({"limits": z.record(z.string(), z.unknown()),})');
+    });
+
+    it("keeps an object with declared properties closed", () => {
+        expect(zodExpression({ type: "object", properties: {} })).toBe(
+            "z.object({})",
+        );
+    });
+
     it("references other schemas by their generated const name", () => {
         expect(
             zodExpression({ $ref: "#/components/schemas/CreateUserDto" }),

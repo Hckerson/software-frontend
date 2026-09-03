@@ -6,13 +6,13 @@ import { display, sans, mono } from "@/public/fonts/font";
 export const viewport: Viewport = {
     width: "device-width",
     initialScale: 1,
-    colorScheme: "light",
-    themeColor: "#ffffff",
+    colorScheme: "light dark",
 };
 
 export const metadata: Metadata = {
-    title: "Next.js App Router Starter",
-    description: "Opinionated Next.js starter with layered architecture",
+    title: "Meter — subscription billing & usage metering",
+    description:
+        "Watch API calls, storage and seats against your plan limits, and upgrade before you hit a ceiling.",
 };
 
 export default function RootLayout({

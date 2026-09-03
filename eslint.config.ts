@@ -13,6 +13,8 @@ const SOURCE = [...VIEWS, "lib/**/*.{ts,tsx}"];
 const ROUTES = ["app/**/page.tsx"];
 const COMPONENTS = ["components/**/*.tsx"];
 const TESTS = ["**/*.test.ts"];
+const EDITORIAL = ["app/page.tsx", "components/sections/landing/**/*.tsx"];
+const CLOCK = ["lib/utils/clock.ts"];
 
 type RestrictedPath = { name: string; message: string };
 
@@ -88,6 +90,14 @@ const starterConfig: ConfigArray = [
     {
         files: ROUTES,
         rules: { "starter/page-composes-only": "error" },
+    },
+    {
+        files: EDITORIAL,
+        rules: { "starter/application-register-density": "off" },
+    },
+    {
+        files: CLOCK,
+        rules: { "no-restricted-properties": "off" },
     },
     {
         files: TESTS,

@@ -51,3 +51,35 @@ export const updateUserDtoSchema = z.object({
     status: z.enum(["ACTIVE", "PENDING", "SUSPENDED"]).optional(),
 });
 export type UpdateUserDto = z.infer<typeof updateUserDtoSchema>;
+
+export const createPlanDtoSchema = z.object({
+    name: z.string(),
+    description: z.string(),
+    planType: z.enum(["FREE", "PRO", "ENTERPRISE"]),
+    priceUSD: z.number(),
+    features: z.record(z.string(), z.unknown()),
+    limits: z.record(z.string(), z.unknown()),
+});
+export type CreatePlanDto = z.infer<typeof createPlanDtoSchema>;
+
+export const updatePlanDtoSchema = z.object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    planType: z.enum(["FREE", "PRO", "ENTERPRISE"]).optional(),
+    priceUSD: z.number().optional(),
+    features: z.record(z.string(), z.unknown()).optional(),
+    limits: z.record(z.string(), z.unknown()).optional(),
+});
+export type UpdatePlanDto = z.infer<typeof updatePlanDtoSchema>;
+
+export const selectPlanDtoSchema = z.object({ planId: z.string() });
+export type SelectPlanDto = z.infer<typeof selectPlanDtoSchema>;
+
+export const changePlanDtoSchema = z.object({ newPlanId: z.string() });
+export type ChangePlanDto = z.infer<typeof changePlanDtoSchema>;
+
+export const trackUsageDtoSchema = z.object({
+    metricType: z.enum(["API_CALLS", "STORAGE_GB", "SEATS"]),
+    amount: z.number(),
+});
+export type TrackUsageDto = z.infer<typeof trackUsageDtoSchema>;
