@@ -1,22 +1,18 @@
 import { USAGE_THRESHOLD } from "@/lib/constants";
-import type { MeterState, MetricUsage, UsageMetricType } from "@/lib/types";
+import type {
+    MeterState,
+    MetricUsage,
+    PlanLimits,
+    UsageMetricType,
+} from "@/lib/types";
 
-const isMetricUsage = (value: unknown): value is MetricUsage => {
-    if (typeof value !== "object" || value === null) return false;
+export const limitFor = (
+    limits: PlanLimits | undefined,
+    metricType: UsageMetricType,
+): number | null => {
+    const value = limits?.[metricType];
 
-    const record = value as Record<string, unknown>;
-
-    return (
-        typeof record.metricType === "string" &&
-        typeof record.amount === "number" &&
-        typeof record.period === "string"
-    );
-};
-
-export const normalizeCurrentUsage = (payload: unknown): MetricUsage[] => {
-    if (Array.isArray(payload)) return payload.filter(isMetricUsage);
-
-    return isMetricUsage(payload) ? [payload] : [];
+    return typeof value === "number" && value > 0 ? value : null;
 };
 
 export const usageFor = (
