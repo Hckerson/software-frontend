@@ -185,13 +185,13 @@ only issuance and delivery are missing.
 
 ## Phase F — Verification
 
-| #   | Work                                        | Notes                                                                                                                                            |
-| --- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| F1  | `@ApiOkResponse({ type })` on every handler | Response schemas then generate; `lib/types/billing.ts` mostly deletes itself. Removes a whole class of frontend/backend drift.                   |
-| F2  | Collapse `GET /usage/current` to one shape  | It returns three today, normalised client-side in `lib/utils/usage.ts`.                                                                          |
-| F3  | Component tests                             | `jsdom` + `@testing-library/react` — **new dependencies**.                                                                                       |
-| F4  | E2E                                         | Playwright — **new dependency**. Would have caught every runtime bug found so far, and would let the UI be visually verified for the first time. |
-| F5  | Integration tests for the cycle             | A seeded database, run the jobs, assert invoice and status transitions. Highest value per line of the lot.                                       |
+| #   | Work                                            | Notes                                                                                                                                            |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| F1  | ~~`@ApiOkResponse({ type })` on every handler~~ | **Done.** All 49 operations declare a success shape; response schemas generate and `lib/types` is aliases over them.                             |
+| F2  | Collapse `GET /usage/current` to one shape      | It returns three today, normalised client-side in `lib/utils/usage.ts`.                                                                          |
+| F3  | ~~Component tests~~                             | **Done.** Vitest runs a jsdom `components` project; the `common/` components carrying a design principle are covered.                            |
+| F4  | E2E                                             | Playwright — **new dependency**. Would have caught every runtime bug found so far, and would let the UI be visually verified for the first time. |
+| F5  | Integration tests for the cycle                 | A seeded database, run the jobs, assert invoice and status transitions. Highest value per line of the lot.                                       |
 
 ---
 
@@ -219,8 +219,9 @@ run in parallel or be dropped without affecting it.
    admin/external trigger? Affects C1's dependency.
 3. **Stripe** — in scope? Determines whether Phase D is real or placeholder.
 4. **Email provider** — which, if any? Blocks Phase E.
-5. **New dependencies** — `@nestjs/schedule`, an email SDK, `jsdom`/`@testing-library/react`,
-   Playwright. All require approval under the Library Selection Policy.
+5. **New dependencies** — `@nestjs/schedule`, an email SDK, Playwright. All require approval
+   under the Library Selection Policy. `jsdom`/`@testing-library/react` were approved and are
+   already wired into Vitest.
 
 ---
 
@@ -243,15 +244,17 @@ cd frontend && pnpm dev
 
 ## Still gated
 
-Everything else in this plan is implemented and verified. These four need a dependency the
+Everything else in this plan is implemented and verified. These three need a dependency the
 Library Selection Policy says must be approved, not installed unilaterally:
 
-| Item                              | Dependency                         | What it unlocks                                                                         |
-| --------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
-| Cron wiring for the cycle jobs    | `@nestjs/schedule`                 | The jobs run unattended instead of on an admin trigger                                  |
-| Email delivery for password reset | an email SDK                       | The reset link reaches the customer; issuance, single-use and verification already work |
-| Component tests                   | `jsdom` + `@testing-library/react` | React components covered by tests                                                       |
-| End-to-end tests                  | Playwright                         | The UI verified in a browser for the first time                                         |
+| Item                              | Dependency         | What it unlocks                                                                         |
+| --------------------------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| Cron wiring for the cycle jobs    | `@nestjs/schedule` | The jobs run unattended instead of on an admin trigger                                  |
+| Email delivery for password reset | an email SDK       | The reset link reaches the customer; issuance, single-use and verification already work |
+| End-to-end tests                  | Playwright         | The UI verified in a browser for the first time                                         |
+
+Component tests are no longer on this list: `jsdom` and `@testing-library/react` were approved
+and are wired into Vitest as a second project.
 
 Stripe remains out of scope; `stripeToken` and `stripeInvoiceId` are reference columns.
 Payment methods manage placeholder records until a processor is integrated.

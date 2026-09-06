@@ -4,15 +4,16 @@ References [Phases 7–8](03-frontend-architecture.md).
 
 ## Delivered in this pass
 
-| Stage | Outcome                                                                                          |
-| ----- | ------------------------------------------------------------------------------------------------ |
-| 1     | Transport rewritten, token registry deduplicated, dark theme, build green                        |
-| 2     | Backend boots; OpenAPI emitted; contract covers 33 routes / 12 schemas                           |
-| 3     | Product definition settled; IA, blueprints, architecture recorded                                |
-| 4     | App shell, auth, route protection, hooks for every endpoint group                                |
-| 5     | Customer surfaces (dashboard, plans, subscription, usage, invoices, settings) and admin surfaces |
-| 6     | Auth moved to an httpOnly cookie; `middleware.ts` enforces routes and admin access server-side   |
-| 7     | RS256 keypair signing; middleware verifies signatures with WebCrypto, no shared secret           |
+| Stage | Outcome                                                                                                  |
+| ----- | -------------------------------------------------------------------------------------------------------- |
+| 1     | Transport rewritten, token registry deduplicated, dark theme, build green                                |
+| 2     | Backend boots; OpenAPI emitted; contract covers 33 routes / 12 schemas                                   |
+| 3     | Product definition settled; IA, blueprints, architecture recorded                                        |
+| 4     | App shell, auth, route protection, hooks for every endpoint group                                        |
+| 5     | Customer surfaces (dashboard, plans, subscription, usage, invoices, settings) and admin surfaces         |
+| 6     | Auth moved to an httpOnly cookie; `middleware.ts` enforces routes and admin access server-side           |
+| 7     | RS256 keypair signing; middleware verifies signatures with WebCrypto, no shared secret                   |
+| 8     | Response schemas on all 49 backend operations; frontend types generated end to end; Vitest renders React |
 
 ## Known gaps, ranked
 
@@ -22,10 +23,10 @@ References [Phases 7–8](03-frontend-architecture.md).
 2. **Password reset emails are not delivered.** Issuance, single-use enforcement and
    verification all work; `LoggingResetDelivery` writes the link to the log. Swapping in a
    provider is one class behind the `RESET_DELIVERY` token — needs an email dependency.
-3. **No component or E2E tests.** Vitest covers tooling, auth verification and formatting; Jest
-   covers backend access control, limits and reset tokens. No React component has been rendered
-   in a test and no browser has driven the UI. Needs `jsdom`/`@testing-library/react` and
-   Playwright.
+3. **No E2E tests.** Vitest now runs two projects — `node` for tooling, logic and auth
+   verification, and `components` in jsdom for React — so the `common/` components carrying a
+   design principle are covered. No browser has driven the UI end to end; that needs Playwright,
+   which is proposed rather than installed.
 4. **Overage is not billed.** Implemented as option 1 — exceeding a limit blocks the request.
    The overage call site exists and is passed a zero rate; billing for overage means adding
    `overageRates` to `SubscriptionPlan`.
@@ -92,24 +93,39 @@ All five are lint-enforced rather than reviewed by eye.
 to the trigger · status is never colour-only, always a word · `prefers-reduced-motion`
 honoured globally in `globals.css`.
 
+The meter and dialog halves of that list are now asserted by component tests rather than
+claimed. Writing them found one real defect: an over-limit meter reported
+`aria-valuenow="250"` against `aria-valuemax="100"`, which is invalid ARIA. The value is now
+clamped to the track maximum while the visible text still states the true percentage.
+
 **States** — every data surface has loading, empty, error, and success. Verified per page in
-[the blueprints](02-page-and-component-blueprints.md#page-blueprints).
+[the blueprints](02-page-blueprints.md#the-page-contract).
 
 **Responsive** — no inline responsive chains anywhere; the shell, meter row, plan grid, and
-tables collapse via named classes in `globals.css`, so breakpoint behaviour is auditable in
+tables collapse via named classes in `components.css`, so breakpoint behaviour is auditable in
 one file.
 
 **Verification gates** — `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build` all green.
+`pnpm test` runs both Vitest projects: `node` for tooling, logic and auth verification, and
+`components` in jsdom for React.
 
 ## Deviation from the master prompt
 
-[MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md) specifies 16 files. This is 6.
+The **portable template** this project was generated from specified 16 files — 10 phase files
+plus 6 Phase-11 ancillary documents. `docs/design-os/` holds 9.
 
-The five phase documents here carry all 11 phases of content; the six Phase-11 ancillary
+Seven documents here carry Phases 1–10; [README](README.md) carries Phase 11; and
+[05](05-billing-cycle-plan.md) is work in progress that is not yet a phase. The six Phase-11 ancillary
 documents (START_HERE, README, DESIGN-OS-COMPLETE, ARTIFACT_INDEX, SETUP-CHECKLIST,
-IMPLEMENTATION_PROMPT) are navigation and index layers over a 16-file set. Six files do not
+IMPLEMENTATION_PROMPT) are navigation and index layers over a 16-file set. Nine files do not
 need an index, a start-here, and a separate artifact index — that scaffolding would be longer
 than the thing it indexes, and every line of it is a line that can drift out of sync with the
 code. The content those files would carry lives in [README](README.md) and in this document.
+
+[MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md) now records this as a resolved
+deviation rather than an outstanding requirement: it retains all six ancillary specifications
+under [Phase 11](../MASTER_PROMPT_COMPLETE.md#phase-11--ancillary-documentation--navigation),
+each marked superseded with where its content actually went. **If this directory ever exceeds
+roughly twelve documents, the arithmetic stops holding — revisit the decision then.**
 
 Recorded here rather than silently omitted, so the deviation is a decision and not a gap.
