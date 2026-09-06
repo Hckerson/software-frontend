@@ -1,6 +1,6 @@
 # Phases 7–8 — Design Tokens & Frontend Architecture
 
-References [Phases 4–6](02-page-and-component-blueprints.md).
+References [Phase 4](02-page-blueprints.md), [Phase 5](06-section-blueprints.md) and [Phase 6](07-component-library.md).
 
 ## Phase 7 — Design tokens
 
@@ -96,14 +96,23 @@ and invoice keys together, because the backend changes all three in one transact
 
 ### Response types
 
-Nest emits request DTOs into the OpenAPI document but not response shapes (no
-`@ApiOkResponse({ type })` on the handlers). So `lib/contract/schemas.ts` covers **requests
-only**, and response types are hand-written in `lib/types/billing.ts` to mirror the Prisma
-models. `Decimal` fields arrive over JSON as `string`; they are typed as such and parsed at
-the formatting boundary, never with `Number()` scattered through components.
+Every one of the backend's 49 operations declares its success shape —
+`@ApiOkResponse`, `@ApiCreatedResponse` or `@ApiNoContentResponse` — so the OpenAPI document
+carries responses as well as requests, and `pnpm contract` generates both. The generator never
+distinguished the two: it emits a zod schema for everything under `components.schemas`, so
+response DTOs started generating the moment the decorators landed.
 
-Closing this gap properly means adding `@ApiOkResponse` to the Nest controllers, after which
-responses generate like requests do. That is the correct fix and is recorded in the roadmap.
+`lib/types/billing.ts` and `lib/types/account.ts` are therefore **aliases over generated
+types**, not hand-written mirrors of the Prisma models. They exist to give the domain a
+vocabulary — `Subscription` rather than `SubscriptionDto` — and to derive unions from it
+(`SubscriptionDto["status"]`). Adding a field to a Nest DTO propagates without anyone editing a
+type by hand.
+
+`Decimal` fields arrive over JSON as `string` and are typed as such, parsed at the formatting
+boundary, never with `Number()` scattered through components.
+
+The one shape still written by hand is `SessionClaims` — the JWT payload middleware verifies.
+That is not an API response and has no DTO to generate from.
 
 ### Authentication boundary
 
