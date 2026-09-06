@@ -12,7 +12,7 @@ const VIEWS = ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"];
 const SOURCE = [...VIEWS, "lib/**/*.{ts,tsx}"];
 const ROUTES = ["app/**/page.tsx"];
 const COMPONENTS = ["components/**/*.tsx"];
-const TESTS = ["**/*.test.ts"];
+const TESTS = ["**/*.test.ts", "**/*.test.tsx", "tools/testing/**"];
 const EDITORIAL = ["app/page.tsx", "components/sections/landing/**/*.tsx"];
 const CLOCK = ["lib/utils/clock.ts"];
 
@@ -101,7 +101,13 @@ const starterConfig: ConfigArray = [
     },
     {
         files: TESTS,
-        rules: { "max-lines": "off" },
+        rules: {
+            "max-lines": "off",
+            "starter/one-component-per-file": "off",
+            "starter/domain-types-in-lib": "off",
+            "starter/token-first-classnames": "off",
+            "starter/application-register-density": "off",
+        },
     },
 ];
 
