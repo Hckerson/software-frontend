@@ -12,6 +12,8 @@ export const queryKeys = {
     upcomingInvoice: ["invoices", "upcoming"] as const,
     usageCurrent: ["usage", "current"] as const,
     usageHistory: ["usage", "history"] as const,
+    usageLimits: ["usage", "limits"] as const,
+    paymentMethods: ["payment-methods"] as const,
     usageLimit: (metric: UsageMetricType) =>
         ["usage", "limit", metric] as const,
     adminStats: ["admin", "stats"] as const,
