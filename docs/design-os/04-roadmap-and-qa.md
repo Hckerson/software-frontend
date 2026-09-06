@@ -16,19 +16,45 @@ References [Phases 7–8](03-frontend-architecture.md).
 
 ## Known gaps, ranked
 
-1. **Response types are hand-written.** Add `@ApiOkResponse({ type })` to the Nest handlers;
-   `pnpm contract` then generates response schemas and `lib/types/billing.ts` shrinks to
-   nothing.
-2. **`GET /usage/current` returns a union of three shapes.** Normalised on the client in
-   `lib/utils/usage.ts`; the real fix is one response shape from the backend.
-3. **No database has been run.** The schema has never been pushed and no seed data exists.
-   Every screen is built against the contract, not against observed responses.
-4. **No component or E2E tests.** Vitest runs in `node` and covers the tooling and the auth
-   verification logic; no React component is rendered in a test. Component tests need `jsdom` +
-   `@testing-library/react`, E2E needs Playwright — all new dependencies, which this repo's
-   Library Selection Policy says are proposed, not installed unilaterally.
-5. **Charts deferred.** Usage history renders as a table. A charting library is a dependency
-   decision and there is no real series to plot until the database runs.
+1. **The cycle jobs run only on an admin trigger.** `POST /admin/billing/cycle/run` does the
+   work; nothing calls it unattended. Needs `@nestjs/schedule` (approval-gated). The jobs are
+   deliberately plain idempotent methods so the cron layer is a thin caller.
+2. **Password reset emails are not delivered.** Issuance, single-use enforcement and
+   verification all work; `LoggingResetDelivery` writes the link to the log. Swapping in a
+   provider is one class behind the `RESET_DELIVERY` token — needs an email dependency.
+3. **No component or E2E tests.** Vitest covers tooling, auth verification and formatting; Jest
+   covers backend access control, limits and reset tokens. No React component has been rendered
+   in a test and no browser has driven the UI. Needs `jsdom`/`@testing-library/react` and
+   Playwright.
+4. **Overage is not billed.** Implemented as option 1 — exceeding a limit blocks the request.
+   The overage call site exists and is passed a zero rate; billing for overage means adding
+   `overageRates` to `SubscriptionPlan`.
+5. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
+   `stripeInvoiceId` are reference columns.
+6. **Charts deferred.** Usage history renders as a table.
+
+## Found by actually running it
+
+None of these were visible from reading the code, type-checking, or linting. They surfaced the
+first time a real request hit a real database.
+
+- **`@CurrentUser('id')` ignored its argument.** The decorator accepted a field name and always
+  returned the whole `AuthUser`, so eleven call sites passed an object where a `userId` string
+  was expected. Every customer-facing endpoint — subscription, usage, invoices — returned 500.
+  Admin counters worked, which is why the bug hid: they take no `@CurrentUser` argument.
+- **`@CurrentUser('subscriptionId')` asked for a field that does not exist on `AuthUser`.**
+  Typing the decorator turned this into a compile error. The upcoming-invoice estimate was
+  passing a user object as a subscription id; it now resolves the caller's active subscription.
+- **IDOR on invoices.** `GET /invoices/:id` and `POST /invoices/:id/mark-paid` took a bare id
+  with no ownership check — any authenticated user could read or settle anyone else's invoice.
+  Both now scope to the caller and return 404 (not 403) so existence does not leak. Verified
+  live: a second account gets 404 for an invoice it does not own.
+- **500s were undebuggable.** `RepositoryError` captured a `cause` that `HttpExceptionFilter`
+  threw away, so the log showed nothing. The filter now logs cause and stack for any 5xx. This
+  is what made the three bugs above findable.
+- **The seed did not exist** despite being referenced by both `package.json` (`tsx`, not
+  installed) and `prisma.config.ts` (`ts-node`, which cannot resolve the generated client's
+  `.js` specifiers). Written, and both commands now point at the compiled output.
 
 ## Incidental fixes made along the way
 

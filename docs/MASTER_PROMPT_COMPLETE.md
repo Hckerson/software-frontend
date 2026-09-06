@@ -1,1105 +1,606 @@
-# MASTER PROMPT — Enterprise {{PRODUCT_NAME}} Design Operating System (COMPLETE)
+# Meter — Design OS Brief
 
-# Placeholder Glossary
-
-Each placeholder below is defined once here and referenced everywhere else in this prompt. Fill them in for your product; never inline a specific brand or domain elsewhere.
-
-- **{{PRODUCT_NAME}}** — the product being designed.
-- **{{DOMAIN}}** — its domain/industry.
-- **{{REFERENCE_PRODUCTS}}** — the category-defining enterprise products in {{DOMAIN}}.
-- **{{PERSONAS}}** — the full set of user roles: primary, secondary, and internal/operational.
-- **{{CORE_ENTITY}}** / **{{CORE_ENTITY_PLURAL}}** — the primary domain record type, singular and plural (e.g. listings, orders, cases, documents).
-- **{{PRIMARY_FLOWS}}** — the domain's core user journeys.
-- **{{SUPPORTING_FLOWS}}** — cross-cutting flows the domain requires beyond its primary journeys (e.g. authentication, profile management, notifications, support, payments, messaging, reviews).
-- **{{ROLE_DASHBOARDS}}** — the per-role dashboards drawn from {{PERSONAS}}.
-- **{{ROLE}}** — a single role drawn from {{PERSONAS}}.
-- **{{DOMAIN_TOOL}}** — a domain-specific utility (e.g. a calculator).
-- **{{DOMAIN_TRANSACTION}}** — the domain's core transaction (e.g. booking/checkout).
-- **{{DOMAIN_SPECIFIC_LIBS}}** — optional libraries only some domains need.
-- **{{THEME_VARIANT}}** — an alternate swappable theme/skin derived from the same tokens.
-- **{{SCALE_TARGET}}** — the target scale the system must support.
-- **{{COMPONENT_COUNT}}** — target component count.
-- **{{SECTION_COUNT}}** — target section count.
-- **{{PAGE_COUNT}}** — target page count.
-- **{{TIMELINE_WEEKS}}** — implementation timeline in weeks.
-- **{{QA_ITEM_COUNT}}** — target QA item count.
-- **{{OUTPUT_DIR}}** — the directory all generated files are written to (default: `design-os/generated/`).
-
-You are operating as an **Enterprise Design System Lead**, **Principal Product Designer**, **UX Architect**, **Information Architect**, **Frontend System Architect**, and **Senior Next.js Engineer**.
-
-Your responsibility is **not to simply design a {{PRODUCT_NAME}} website**.
-
-Your responsibility is to build an **enterprise-grade {{DOMAIN}} platform** using a structured Design Operating System that transforms business requirements into a production-ready frontend.
-
-You must think like someone building {{REFERENCE_PRODUCTS}}—not a landing page.
-
-The final deliverable must be production-ready and suitable for handoff to engineering teams without ambiguity.
+> This was a portable template with `{{PLACEHOLDERS}}`. It has been run: the placeholders are
+> resolved, the system it describes is built, and the documents it specifies are in
+> [`docs/design-os/`](design-os/). It is now **Meter's standing brief** — the contract that
+> governs regeneration, extension, and review of this codebase, not a prompt awaiting a first
+> execution.
+>
+> Read it when you are adding a surface, changing an architectural boundary, or auditing
+> whether the code still matches the design system. If this document and the code disagree,
+> one of them is a bug — decide which, then fix that one.
 
 ---
 
-# Primary Objective
+## Contents
 
-Design a modern enterprise {{DOMAIN}} platform capable of supporting:
-
-- {{PERSONAS}}
-
-The system must be scalable enough for {{SCALE_TARGET}} (e.g. millions of {{CORE_ENTITY_PLURAL}}).
-
-Every design decision must support:
-
-- usability
-- accessibility
-- scalability
-- maintainability
-- performance
-- frontend implementation
-- responsive behavior
-- enterprise consistency
+- [What this governs](#what-this-governs)
+- [Product constants](#product-constants)
+- [Technology stack](#technology-stack)
+- [The three agreements](#the-three-agreements)
+- [Phase map](#phase-map)
+- [Phases 1–11](#phase-1--product-vision)
+- [Output contract](#output-contract)
+- [Critical rules](#critical-rules)
+- [Deviations, recorded](#deviations-recorded)
 
 ---
 
-# Technology Stack
+## What this governs
 
-> **Scope & portability.** This prompt runs inside a host repository and defers to that repo's conventions. When a host house style guide (e.g. `CONVENTIONS.md`) is present, **its rules win** — reconcile any stack difference in this section before generating anything. The stack below is the default for a greenfield project with no host convention. Its styling model is deliberately **token-first** (named-scale classes in `globals.css`, tokens as the single source of truth) to match the house style of the starter this template ships in.
+You are operating as Design System Lead, Product Designer, Information Architect, Frontend
+Architect, and Senior Next.js engineer on **Meter** — a B2B subscription-billing and
+usage-metering console.
 
-Design for the following stack.
+The reference bar is **Stripe Billing, Chargebee, Paddle, Orb**. Not a landing page with a
+pricing table: a console an operator lives in.
 
-Framework
+The deliverable is a system that supports millions of subscriptions and hands off to
+engineering without ambiguity. Every decision must serve usability, accessibility,
+scalability, maintainability, performance, responsive behaviour, and enterprise consistency —
+and must be traceable to the phase above it.
 
-- Next.js (App Router)
-- React
-- TypeScript
-
-Styling
-
-- Tailwind CSS (token-mapped utilities only — no arbitrary values)
-- CSS custom properties / design tokens (single source of truth)
-- Named-scale utility & pattern classes in globals.css (`.pad`, `.gap`, `.smooth`, recurring component patterns)
-
-## Styling Architecture Agreement
-
-**CRITICAL:** Styling is **token-first**. Every recurring styling decision is named once — as a design token or a named class in `globals.css` — and referenced everywhere. Components never hardcode raw values and never repeat long utility chains.
-
-**Globals.css owns:**
-
-- CSS reset (box-sizing, font smoothing, scroll behavior)
-- Design tokens (`@theme` variables mapping raw tokens onto Tailwind names)
-- Typography defaults (h1–h6, p, a, li, ul, ol)
-- Form baseline (font-family, font-size only)
-- Named-scale utility classes (`.pad`, `.gap`, `.smooth`)
-- Named pattern classes for recurring component styling (e.g. `.stat-card`, `.metric-value`)
-- Accessibility defaults (:focus-visible, ::selection)
-- Browser UI (scrollbars)
-
-**Components own:**
-
-- Composition and layout via token-mapped Tailwind utilities (`bg-accent`, `p-3`, `text-h1`) and named classes
-- Genuinely one-off styling that is used exactly once
-- Variant/state selection (which token or named class applies), never re-declaration of raw values
-
-**Core Principle:** Single source of truth. A value or recurring pattern is defined once (token or named class) and referenced by name — change it in one place, it updates everywhere. Any styling combo used twice is promoted to a named class in `globals.css`.
-
-**Enforcement:** See Phase 6 (Component Library) and Phase 8 (Frontend Architecture) for how this applies during design and implementation.
-
-## Library Selection Policy
-
-Do not assume or hardcode a specific third-party library for the needs below. For each one:
-
-1. **Reuse first.** If the host repo already depends on a library for this need, use that library — do not introduce an alternative.
-2. **Otherwise recommend.** Choose the option that is currently the most widely recommended for this need on a Next.js App Router + React + TypeScript stack, and briefly say why.
-3. **Confirm before installing.** Never add a dependency unilaterally and never hand-edit `package.json`. Propose the package and the reason, then wait for the maintainer's approval before running `pnpm add`.
-
-State
-
-- Server state; local state (useState / useReducer / URL params); a global store only when complexity genuinely demands one.
-
-Forms
-
-- Schema-based validation (derive types from the schema) and form handling.
-
-Animations
-
-- Declarative UI animation.
-
-{{DOMAIN_SPECIFIC_LIBS}} (include only if the domain needs them, and only after confirmation — e.g. a geospatial library for map-heavy domains)
-
-Charts
-
-- Data visualization.
-
-Icons
-
-- A single, consistent icon set.
-
-Images
-
-- The Next.js Image component (framework-native).
-
-Accessibility
-
-- WCAG 2.2 AA
-
-Testing
-
-- Unit / component tests and end-to-end tests.
+**Think in systems, never in pages.** Never begin at UI. Begin at product strategy, and let
+each phase reference the one before it. Where an assumption is unavoidable, record it as an
+assumption rather than presenting it as a finding.
 
 ---
 
-# Design Philosophy
+## Product constants
 
-Think in systems.
+These are settled. Nothing in this repo may re-derive them; see
+[00-product-definition.md](design-os/00-product-definition.md) for the reasoning behind each.
 
-Never think in pages first.
+| Constant           | Value                                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| Product            | **Meter**                                                                                          |
+| Domain             | Subscription billing & usage metering (B2B SaaS)                                                   |
+| Reference products | Stripe Billing, Chargebee, Paddle, Orb                                                             |
+| Personas           | Customer (`USER`), Billing Admin (`ADMIN`), Internal Ops (`ADMIN`)                                 |
+| Core entity        | **Subscription** / Subscriptions                                                                   |
+| Primary flows      | Select a plan · Monitor usage against limits · Pay and retrieve invoices · Change or cancel a plan |
+| Supporting flows   | Authentication, onboarding, profile, plan-catalogue administration, ops oversight                  |
+| Role dashboards    | Customer dashboard (`/dashboard`), Admin console (`/admin`)                                        |
+| Core transaction   | Plan selection / plan change — the billing-state mutation                                          |
+| Hero interaction   | The **usage meter**: quota consumed vs. plan limit                                                 |
+| Metered dimensions | `API_CALLS`, `STORAGE_GB`, `SEATS` — exactly these three                                           |
+| Plan tiers         | `FREE`, `PRO`, `ENTERPRISE` — exactly these three                                                  |
+| Theme variant      | Dark, derived from the same tokens (`.dark` in `styles/tokens.css`)                                |
+| Domain libraries   | **None.** No maps, no geo, no editor. Charts deferred until a real series exists.                  |
+| Output directory   | [`docs/design-os/`](design-os/)                                                                    |
 
-Never jump directly into UI.
+### Business rules that constrain every screen
 
-Always begin with product strategy.
+- A user has **at most one non-canceled subscription** (`@@unique([userId, status])`).
+- One invoice per `(subscriptionId, billingPeriodStart)`.
+- Usage accumulates into one row per `(subscriptionId, metricType, period)` — it never appends.
+- Deactivating a plan must not cascade to the subscriptions referencing it.
+- `Decimal` fields arrive over JSON as `string`. They are typed as `string` and parsed at the
+  formatting boundary — never with a `Number()` scattered through a component.
 
-Every output must be traceable.
+### Non-goals
 
-Every decision must reference previous phases.
+Not a payment processor (Stripe tokens are stored, not charged), no dunning automation, no
+tax/VAT, no multi-currency, no seat provisioning, no in-app support inbox.
 
-Avoid assumptions unless necessary.
+---
 
-When assumptions are required:
+## Technology stack
 
-Create an "Assumptions" section.
+The versions below are what the repo runs, not a recommendation to re-evaluate.
 
-## Styling Separation of Concerns
+**Framework** — Next.js 16 (App Router) · React 19 · TypeScript 5.
 
-**Never hardcode a styling value, and never inline the same utility chain twice.**
+**Styling** — Tailwind v4 with token-mapped utilities only, no arbitrary values · CSS custom
+properties as the single source of truth · named utility and pattern classes.
 
-Every color, size, radius, shadow, and duration comes from a design token. Every recurring styling combination is named once as a class in `globals.css` and referenced by name. This prevents:
+**Server state** — TanStack React Query (`staleTime` 60 s, no refetch on focus). **Local
+state** — `useState`; filters that must survive a reload are URL search params. **No global
+store, and no client-held session** — the JWT is an httpOnly cookie the browser attaches
+itself, so there is no auth state for the client to own or get wrong.
 
-- Magic values scattered across components (change one, miss ten)
-- Long, unreadable responsive utility chains repeated in JSX
-- Drift between components that were meant to look identical
-- Styling decisions that live in no single, findable place
+**Transport** — axios, credentialed, reachable only from `use*` hooks in `lib/hooks`.
 
-**Rule:** Components compose token-mapped Tailwind utilities (`bg-accent`, `p-3`, `gap-md`) and named classes. A styling combo used more than once is promoted to a named class in `globals.css`. Raw values (`#1f4e3d`, `13px`) and arbitrary Tailwind values (`bg-[#1f4e3d]`) are never allowed — add a token instead.
+**Validation** — Zod v4. Request schemas are **generated** into `lib/contract/` from the
+backend's OpenAPI document; form schemas are hand-written in `lib/validations/`. Types are
+derived from schemas, never declared alongside them.
 
-**Decision Tree:**
+**Motion** — `motion`, via `components/wrappers/motion-wrapper.tsx`. Conventions in
+[MOTION.md](MOTION.md). `prefers-reduced-motion` is honoured globally in `globals.css`.
+
+**Icons** — `lucide-react`, the only icon set. **Dates** — `date-fns`. **Images** —
+`next/image`. **Fonts** — `next/font`, three families self-hosted with `display: swap`.
+
+**Accessibility** — WCAG 2.2 AA.
+
+**Testing** — Vitest, currently `node` environment only: it covers the tooling
+(`tools/contract`, `tools/codemods`, the seven lint rules) and the auth verification logic.
+No React component is rendered in a test yet; that needs `jsdom` + `@testing-library/react`,
+and E2E needs Playwright.
+
+### Library selection policy
+
+1. **Reuse first.** If the repo already depends on a library for the need, use it. Do not
+   introduce an alternative.
+2. **Otherwise propose.** Name the package, say why it is the current default for Next.js App
+   Router + React + TypeScript, and state what it costs.
+3. **Confirm before installing.** Never add a dependency unilaterally and never hand-edit
+   `package.json`. Propose, wait for approval, then `pnpm add`.
+
+The three outstanding dependency decisions — component-test harness, E2E runner, charts — are
+all pending under this policy. See [known gaps](design-os/04-roadmap-and-qa.md#known-gaps-ranked).
+
+---
+
+## The three agreements
+
+Meter's architecture is **enforced, not documented**. Seven custom ESLint rules in
+[`tools/eslint/rules/`](../tools/eslint/rules/) hold these boundaries. If a rule fires, the
+design is wrong — not the rule.
+
+### 1. Styling is token-first, in three layers
+
+| Layer                                               | Owns                                                                                                       |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`styles/tokens.css`](../styles/tokens.css)         | Every raw value, exactly once. Light palette on `:root`, dark overrides on `.dark`. Swap here to rebrand.  |
+| [`styles/globals.css`](../styles/globals.css)       | `@theme` mapping tokens onto Tailwind names · reset · typography defaults · `.pad`/`.gap`/`.smooth` · a11y |
+| [`styles/components.css`](../styles/components.css) | Named pattern classes: `.app-shell`, `.metric-grid`, `.usage-meter`, `.status-pill`, `.data-table`, …      |
+
+Token groups are `--colors-*`, `--fonts-*`, `--spacing-*`, `--paddings-*`, `--margins-*`,
+`--gaps-*`, `--radii-*`, `--shadows-*`, `--durations-*`, `--timing-*`, `--opacities-*`,
+`--measures-*`, `--border-*`, `--icon-*`, `--z-*`. Every scale token is theme-independent; the
+`.dark` block overrides colours and shadows only.
+
+**Nothing outside `tokens.css` may declare a raw value.**
 
 ```
 Where should this style live?
-├─ "Is it a raw value (color, spacing, duration, radius)?"
-│  └─ YES → a design token (tokens.css → @theme in globals.css)
-├─ "Is it base typography (h1-h6, p, a)?"
-│  └─ YES → globals.css
-├─ "Is it form input baseline (font/size only)?"
-│  └─ YES → globals.css
-├─ "Is it accessibility (focus, selection)?"
-│  └─ YES → globals.css
-├─ "Is this styling combo used more than once?"
-│  └─ YES → a named class in globals.css (.pad, .smooth, .stat-card)
-└─ "Is it genuinely one-off styling?"
-   └─ YES → token-mapped Tailwind utilities in the component
+├─ A raw value (colour, spacing, duration, radius)? ────────→ styles/tokens.css
+├─ Base typography (h1–h6, p, a) or an a11y default? ───────→ styles/globals.css
+├─ A named scale (.pad, .gap, .smooth)? ────────────────────→ styles/globals.css
+├─ A combo used more than once, or any breakpoint? ─────────→ styles/components.css
+└─ Genuinely one-off? ─────────────────────→ token-mapped Tailwind utilities in the component
 ```
 
----
+Two consequences worth stating plainly:
 
-# Required Workflow
+- **`components.css` is a deliberate departure from the generic template**, which put pattern
+  classes in `globals.css`. With the shell, grids, meter, pill, table, dialog and states all
+  named, that file would have doubled. The split mirrors the existing `tokens.css` import.
+- Because `token-first-classnames` forbids breakpoint chains in JSX, **every breakpoint in the
+  application lives in `components.css`** — responsive behaviour has one findable, auditable
+  home.
 
-You MUST complete every phase before continuing.
+Forbidden, without exception: `bg-[#1f4e3d]`, `p-[13px]`, a hex in a component, a duplicated
+utility chain, a variant that re-declares a raw value instead of selecting a token.
 
-Never skip phases.
+### 2. Layering: `route → section → component → hook → transport`
 
-Never merge phases.
+| Boundary                                                  | Enforced by                                   |
+| --------------------------------------------------------- | --------------------------------------------- |
+| Routes compose only — no inline components or data        | `starter/page-composes-only`                  |
+| One component per file, filename matches its name         | `starter/one-component-per-file`              |
+| Views never import the transport                          | `no-restricted-imports` on `@/lib/api-client` |
+| Transport calls live in `use*` hooks in `lib/hooks`       | `starter/api-access-boundary`                 |
+| Shared types live in `lib/types`                          | `starter/domain-types-in-lib`                 |
+| No raw values, no arbitrary values, no inline breakpoints | `starter/token-first-classnames`              |
+| Console spacing ceiling and title scale                   | `starter/application-register-density`        |
+| No comments in TS/TSX                                     | `starter/no-comments`                         |
+| Files stay under 150 lines                                | `max-lines`                                   |
 
-Every phase must produce implementation-ready artifacts.
+**This is why the section layer exists.** A route file forbidden from declaring components or
+data has nowhere to put page composition except sections. The lint rules and the folder
+structure are the same decision expressed twice.
 
----
+### 3. Application register, not editorial
 
-# PHASE 1 — Product Vision
-
-Create the enterprise product vision.
-
-Include:
-
-Business vision
-
-Product purpose
-
-Business goals
-
-Value proposition
-
-Competitive positioning
-
-Primary personas
-
-Secondary personas
-
-Jobs To Be Done
-
-Business rules
-
-Success metrics
-
-KPIs
-
-North Star metric
-
-Governance
-
-Platform constraints
-
-Design principles
-
-Implementation philosophy
-
-Non-goals
-
-Future scalability considerations
-
-Output:
-
-A Product Vision document that becomes the single source of truth.
+This is a console, not a marketing site. Dense spacing, `text-h4` page titles, no hero type,
+no decorative scale. Enforced by `starter/application-register-density`. The single exception
+is `/` — the landing route, which uses `.landing-hero` and `.landing-section`.
 
 ---
 
-# PHASE 2 — Experience Maps
+## Phase map
 
-Design experiences before pages.
+The eleven phases of the original template are carried by six documents. Each phase below
+states where it lives and what code it governs.
 
-Create experience maps for:
-
-{{PRIMARY_FLOWS}}
-
-{{ROLE_DASHBOARDS}}
-
-{{SUPPORTING_FLOWS}}
-
-For each experience include:
-
-User intent
-
-Trigger
-
-Entry points
-
-Journey
-
-Decision points
-
-Emotional state
-
-Failure paths
-
-Recovery paths
-
-System behavior
-
-Completion criteria
-
-Dependencies
+| Phases | Document                                                                             | Governs                                              |
+| ------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| 1      | [00-product-definition.md](design-os/00-product-definition.md)                       | Personas, business rules, design principles          |
+| 2–3    | [01-information-architecture.md](design-os/01-information-architecture.md)           | `lib/data/navigation.ts`, `middleware.ts`            |
+| 4–6    | [02-page-and-component-blueprints.md](design-os/02-page-and-component-blueprints.md) | `app/`, `components/sections/`, `components/common/` |
+| 7–8    | [03-frontend-architecture.md](design-os/03-frontend-architecture.md)                 | `styles/`, `lib/`, the layering rule                 |
+| 9–10   | [04-roadmap-and-qa.md](design-os/04-roadmap-and-qa.md)                               | Known gaps, verification gates                       |
+| next   | [05-billing-cycle-plan.md](design-os/05-billing-cycle-plan.md)                       | Invoicing, scheduler, payments, reset                |
+| 11     | [design-os/README.md](design-os/README.md) + [repo README](../README.md)             | Navigation and orientation                           |
 
 ---
 
-# PHASE 3 — Information Architecture
+# Phase 1 — Product Vision
 
-Using the experience maps:
+**Lands in** [00-product-definition.md](design-os/00-product-definition.md). **Status:**
+settled 2026-08-27.
 
-Design:
+Business vision, purpose, goals, value proposition, competitive positioning; primary,
+secondary and internal personas; jobs to be done; business rules; success metrics and the
+North Star; governance; platform constraints; design principles; implementation philosophy;
+non-goals; future scalability.
 
-Navigation hierarchy
+**Settled for Meter:** North Star is **active subscriptions**. The root decision on record is
+the removal of `MENTOR | STUDENT | GUARDIAN | SCHOOL_ADMIN` from `UserRole` — a vocabulary
+from a different product with no model, service or endpoint behind it. `UserRole` is now
+`ADMIN | USER`, and every persona descends from that.
 
-Sitemap
+The five design principles are binding on every later phase:
 
-Content hierarchy
-
-Role-based navigation
-
-Permissions
-
-Content taxonomy
-
-Labeling conventions
-
-Cross-linking
-
-Search hierarchy
-
-Filtering hierarchy
-
-SEO hierarchy
-
-Breadcrumb strategy
-
-Empty routes
-
-Fallback routes
-
-Future expansion strategy
+1. **The meter is the hero.** Every customer screen answers _am I within my limits_ first.
+2. **Money is never ambiguous.** Amounts carry currency, periods carry both endpoints, status
+   is a word — never a colour alone.
+3. **Destructive actions confirm.** Cancel, deactivate, delete all take a second step.
+4. **Application register, not editorial.**
+5. **Empty, loading and error are designed states**, not afterthoughts.
 
 ---
 
-# PHASE 4 — Page Blueprints
+# Phase 2 — Experience Maps
 
-For every page create functional blueprints.
+**Lands in** [01-information-architecture.md](design-os/01-information-architecture.md).
 
-Examples include:
+Design experiences before pages. Meter has six, and every route traces to one:
 
-Home
+| Map | Flow                                                |
+| --- | --------------------------------------------------- |
+| E1  | Select a plan (Customer, first run)                 |
+| E2  | Monitor usage (Customer, recurring — the core loop) |
+| E3  | Pay & retrieve invoices (Customer)                  |
+| E4  | Change or cancel (Customer)                         |
+| E5  | Administer the catalogue (Billing Admin)            |
+| E6  | Watch platform health (Internal Ops)                |
 
-Search
+Each map carries: user intent · trigger · entry points · journey · decision points · emotional
+state · failure paths · recovery paths · system behaviour · completion criteria · dependencies.
 
-{{CORE_ENTITY}} Details
-
-{{CORE_ENTITY}} List/Map View
-
-Saved {{CORE_ENTITY_PLURAL}}
-
-Favorites
-
-Compare {{CORE_ENTITY_PLURAL}}
-
-{{ROLE}} Profile
-
-{{ROLE}} Dashboard (per role in {{PERSONAS}})
-
-Messages
-
-Notifications
-
-Settings
-
-Profile
-
-{{DOMAIN_TOOL}}
-
-{{CORE_ENTITY}} Submission
-
-Authentication
-
-{{DOMAIN_TRANSACTION}}
-
-Payment
-
-Help Center
-
-404
-
-500
-
-For each page define:
-
-Purpose
-
-Business objective
-
-User objective
-
-Primary tasks
-
-Modules
-
-Required data
-
-Permissions
-
-Responsive behavior
-
-Loading states
-
-Empty states
-
-Error states
-
-Success states
-
-Actions
-
-Dependencies
-
-Implementation notes
+A new flow gets a map before it gets a route. E2 is the loop the product lives or dies on;
+weigh changes against it first.
 
 ---
 
-# PHASE 5 — Section Blueprints
-
-Break every page into reusable sections.
-
-Each section must include:
-
-Purpose
-
-Responsibilities
-
-Hierarchy
-
-Content model
-
-Data requirements
-
-Interaction model
-
-Controls
-
-Responsive behavior
-
-Accessibility requirements
-
-Loading states
-
-Error states
-
-Skeleton states
-
-Empty states
-
-Animation behavior
-
-Reuse potential
-
-Technical notes
-
-No section should solve multiple unrelated jobs.
-
----
-
-# PHASE 6 — Component Library
-
-Transform sections into a design system.
-
-For every component specify:
-
-Component name
-
-Purpose
-
-Variants
-
-Props
-
-Slots
-
-**Styling Approach** (REQUIRED)
-
-- Specify which named classes and token-mapped utilities the component composes
-- List all design tokens consumed (e.g., --color-accent, --space-3)
-- Identify any styling combo used more than once and promote it to a named class in globals.css
-- State: "This component hardcodes no raw values and references tokens/named classes only"
-
-Tokens
-
-States
-
-Accessibility
-
-Keyboard support
-
-ARIA
-
-Responsive behavior
-
-Composition rules
-
-Interaction patterns
-
-Validation rules
-
-Animation rules
-
-Loading behavior
-
-Error behavior
-
-Content rules
-
-Do
-
-Don't
-
-Anti-patterns (add: "Never hardcode a raw value or arbitrary Tailwind value — add a token", "Never inline the same utility chain twice — promote it to a named class")
-
-Dependencies
-
-Examples
-
-Prioritize reusable enterprise components.
-
-Avoid page-specific components.
-
----
-
-## Component Styling Standards
-
-Every component must meet these requirements:
-
-1. **Token-only values** — No raw colors, sizes, or durations; every value comes from a token
-2. **No arbitrary Tailwind values** — `bg-accent`, never `bg-[#1f4e3d]`
-3. **No repeated chains** — Any utility combo used more than once is a named class in globals.css
-4. **Variant clarity** — Variants (primary, secondary, sm, lg, …) select tokens/named classes, not raw values
-5. **Single source of truth** — Each recurring styling decision is defined once and referenced by name
-6. **Consistency** — Components meant to look alike reference the same token or named class
-
-Failure to meet these standards indicates a design problem that must be reworked.
-
----
-
-# PHASE 7 — Design Tokens
-
-Generate a scalable token system that is the **single source of truth** for every styling value.
-
-## Token Responsibility
-
-Tokens hold every raw value; components and named classes reference them by name. A raw value must never appear outside a token definition.
-
-**Example:**
-
-```css
-/* tokens.css → @theme in globals.css */
---color-accent: #1f4e3d;   ✓ Value lives in exactly one place
-
-/* Component (token-mapped utility) */
-"bg-accent hover:bg-accent-dark"   ✓ Token referenced by name
-
-/* globals.css (recurring pattern promoted to a named class) */
-.stat-card { border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }  ✓ Defined once, reused
+# Phase 3 — Information Architecture
+
+**Lands in** [01-information-architecture.md](design-os/01-information-architecture.md).
+**Governs** [`lib/data/navigation.ts`](../lib/data/navigation.ts) and
+[`middleware.ts`](../middleware.ts).
+
+Navigation hierarchy · sitemap · content hierarchy · role-based navigation · permissions ·
+taxonomy · labelling conventions · cross-linking · search and filtering hierarchy · SEO ·
+breadcrumbs · empty routes · fallback routes · expansion strategy.
+
+**Settled for Meter.** Two route groups behind one shell:
+
+```
+/                        landing (public)
+/auth/*                  login · register · forgot-password · reset-password
+(app)/
+  /dashboard             customer overview
+  /plans                 plan catalogue
+  /subscription          current subscription
+  /usage                 usage detail
+  /invoices  /invoices/[id]
+  /settings
+  /admin  /admin/plans  /admin/subscriptions  /admin/invoices
 ```
 
-**Never:**
+Permissions are enforced server-side before render, not by a client gate. `AppShell` reads
+`role` from `GET /users/me` **only** to decide whether to render the admin nav group — never
+to authorise. Adding a route means adding it to the sitemap, to `navigation.ts`, and to the
+permission table in the same change.
 
-```css
-/* Component — WRONG */
-"bg-[#1f4e3d] p-[13px]"   ❌ Raw/arbitrary value bypasses the token system
+---
+
+# Phase 4 — Page Blueprints
+
+**Lands in** [02-page-and-component-blueprints.md](design-os/02-page-and-component-blueprints.md).
+**Governs** [`app/`](../app/).
+
+Every page defines: purpose · business objective · user objective · primary tasks · modules ·
+required data · permissions · responsive behaviour · loading, empty, error and success states
+· actions · dependencies · implementation notes.
+
+**All four states are mandatory on every data surface.** A page blueprint that omits its empty
+state is incomplete, not concise.
+
+Blueprinted: `/dashboard`, `/plans`, `/subscription`, `/usage`, `/invoices`, `/invoices/[id]`,
+`/settings`, the four `/admin` screens, `/`, `/auth/*`, `not-found`, `error`.
+
+---
+
+# Phase 5 — Section Blueprints
+
+**Lands in** [02-page-and-component-blueprints.md](design-os/02-page-and-component-blueprints.md).
+**Governs** [`components/sections/`](../components/sections/), one folder per route.
+
+Each section carries: purpose · responsibilities · hierarchy · content model · data
+requirements · interaction model · controls · responsive behaviour · accessibility · loading,
+error, skeleton and empty states · animation behaviour · reuse potential · technical notes.
+
+**No section solves multiple unrelated jobs.** This is why `/subscription` is four files
+(`subscription-detail`, `subscription-facts`, `subscription-actions`, `subscription-history`)
+rather than one — and why a section that grows past 150 lines is telling you it has taken on
+a second job.
+
+---
+
+# Phase 6 — Component Library
+
+**Lands in** [02-page-and-component-blueprints.md](design-os/02-page-and-component-blueprints.md).
+**Governs** [`components/common/`](../components/common/) and
+[`components/layout/`](../components/layout/).
+
+Prioritise reusable enterprise components. Avoid page-specific ones — if it is used once, it
+is a section, not a component.
+
+For each component specify: name · purpose · variants · props · slots · **styling approach** ·
+tokens consumed · states · accessibility · keyboard support · ARIA · responsive behaviour ·
+composition rules · interaction patterns · validation · animation · loading behaviour · error
+behaviour · content rules · do / don't · anti-patterns · dependencies · examples.
+
+The **styling approach** entry is not optional. It names the classes the component composes,
+lists the tokens it consumes, promotes any twice-used combo to `components.css`, and asserts:
+_this component hardcodes no raw values and references tokens and named classes only._
+
+**The library:** Button · LinkButton · PageHeader · SectionCard · StatCard · StatusPill ·
+UsageMeter · DataTable · DetailRow · EmptyState · ErrorState · Skeleton · ConfirmDialog ·
+Money · PeriodRange · FormField, plus the `ui/forms/` input primitives and the layout set
+(AppShell, Sidebar, SidebarGroup, Topbar, ThemeToggle, AuthCard).
+
+Two of these carry the product's principles directly: **UsageMeter** is the hero interaction
+and must expose `role="progressbar"` with `aria-valuenow/min/max`; **Money** and
+**PeriodRange** exist so that no component formats an amount or a period by hand.
+
+### Component styling standards
+
+1. Token-only values — every value comes from a token.
+2. No arbitrary Tailwind values — `bg-accent`, never `bg-[#1f4e3d]`.
+3. No repeated chains — a combo used twice becomes a named class.
+4. Variants select tokens and named classes; they never re-declare raw values.
+5. One source of truth per recurring decision.
+6. Components meant to look alike reference the same class.
+
+All six are lint-enforced. Failing them is a design problem to rework, not a lint error to
+silence.
+
+---
+
+# Phase 7 — Design Tokens
+
+**Lands in** [03-frontend-architecture.md](design-os/03-frontend-architecture.md).
+**Governs** [`styles/`](../styles/).
+
+Colours · typography · spacing · sizing · elevation · radii · motion · transitions · opacity ·
+shadows · breakpoints · grid · container widths · icon sizes · focus rings · z-index · dark
+mode · semantic tokens · component tokens.
+
+See [the styling agreement](#1-styling-is-token-first-in-three-layers) for the layer contract.
+
+Two corrections made when this phase closed, worth remembering because both are easy to
+reintroduce:
+
+- The seven `--stat-card-*` tokens hardcoded hex and px that duplicated existing tokens. They
+  now alias `--colors-*`, `--paddings-*`, `--radii-*`, `--shadows-*`. **This aliasing is what
+  makes a theme swap possible at all** — a component token that holds its own raw value is a
+  theme leak.
+- `.metric-icon` referenced `--metric-color-rgb`, which was never defined: dead CSS. It now
+  uses `color-mix()`, so no parallel RGB token exists to drift.
+
+---
+
+# Phase 8 — Frontend Architecture
+
+**Lands in** [03-frontend-architecture.md](design-os/03-frontend-architecture.md).
+
+### Folder structure
+
+```
+middleware.ts            server-side route + admin gate
+app/
+  layout.tsx  page.tsx  not-found.tsx  error.tsx
+  auth/       layout.tsx + login | register | forgot-password | reset-password
+  (app)/      layout.tsx + dashboard | plans | subscription | usage
+              | invoices | invoices/[id] | settings | admin/*
+components/
+  common/     the reusable library (Phase 6)
+  layout/     AppShell, Sidebar, SidebarGroup, Topbar, ThemeToggle, AuthCard
+  sections/   one folder per route; each file is a composable section
+  ui/forms/   input primitives
+  providers/  Provider (React Query)
+  wrappers/   MotionWrapper
+lib/
+  api-client.ts        transport — credentialed; reachable only from lib/hooks
+  auth/                verify-token (Edge, WebCrypto) + its tests
+  contract/            generated from OpenAPI; never hand-edited
+  errors/              typed transport failure
+  hooks/               one use-<resource> per endpoint group, plus query-keys
+  types/               domain response types, api envelope, table column
+  data/                navigation, metric descriptors, status and plan options
+  utils/               formatters, usage normaliser, status tones, form errors, clock
+  validations/         zod form schemas
+styles/
+  tokens.css  globals.css  components.css
+tools/
+  eslint/rules/  the seven rules · contract/  generator · codemods/
 ```
 
-Include:
+### Data layer
 
-Colors
+React Query owns server state. Query keys are centralised in
+[`lib/hooks/query-keys.ts`](../lib/hooks/query-keys.ts) so invalidation after a mutation is a
+lookup, not a guess. **Mutations that change billing state invalidate the subscription, usage
+and invoice keys together**, because the backend changes all three in one transaction.
 
-Typography
+### The contract is generated
 
-Spacing
+`lib/contract/` is generated from the backend's OpenAPI document — `pnpm openapi` in
+`../backend`, then `pnpm contract` here. Never hand-edit it.
 
-Sizing
+Nest emits **request** DTOs only (no `@ApiOkResponse({ type })` on the handlers), so response
+types are hand-written in `lib/types/billing.ts` to mirror the Prisma models. That is a
+recorded gap with a known fix, not a pattern to imitate.
 
-Elevation
+### Authentication boundary
 
-Border Radius
+The JWT is an **httpOnly cookie** issued by the backend, cleared by `POST /auth/logout`;
+`HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in production. No script on the page can read
+it, and nothing about the session touches `localStorage`.
 
-Motion
+Tokens are signed **RS256**. The backend holds the private key; this app is given only the
+public half (`AUTH_JWT_PUBLIC_KEY`), so nothing secret crosses the boundary and the two
+services stay independently deployable.
 
-Transitions
+[`middleware.ts`](../middleware.ts) runs before render and rejects any token whose signature
+fails, whose `alg` is not `RS256` (closing the `alg: none` downgrade), or whose `exp` has
+passed; redirects unauthenticated visitors to `/auth/login?next=<path>`; keeps non-admins out
+of `/admin/*`; bounces signed-in visitors away from `/auth/*`. It **fails closed** — an unset
+public key sends every protected route to login rather than falling open.
 
-Opacity
+Verification uses WebCrypto (`RSASSA-PKCS1-v1_5` / SHA-256) so it runs in the Edge runtime
+with **no dependency on either side**, and is tested against a real keypair in
+[`verify-token.test.ts`](../lib/auth/verify-token.test.ts).
 
-Shadows
+**Middleware is a routing layer. The backend remains the authority** — `JwtAuthGuard` +
+`RolesGuard` verify independently on every request.
 
-Breakpoints
+### Performance
 
-Grid
-
-Container Widths
-
-Icon Sizes
-
-Focus Rings
-
-Z-index Scale
-
-Dark Mode
-
-Semantic Tokens
-
-Component Tokens (provide values; don't apply to elements)
-
----
-
-# PHASE 8 — Frontend Architecture
-
-Design the frontend architecture.
-
-## Styling Organization (CRITICAL)
-
-**CSS Reset Strategy:**
-
-- Globals.css contains a minimal reset: box-sizing, font smoothing, scroll behavior
-- Base typography (h1–h6, p, a) is set from tokens
-- Recurring visual patterns are named classes; one-off styling uses token-mapped utilities
-
-**Globals.css Structure (in order):**
-
-- **@import layer:** Tailwind, @custom-variant, @import tokens.css
-- **@theme layer:** design tokens mapped onto Tailwind names (colors, fonts, spacing, shadows, easing, motion)
-- **Typography layer:** HTML element defaults (h1–h6, p, a) from tokens
-- **Form baseline:** input, textarea, select (font-family, font-size only)
-- **Named-scale utilities:** .pad, .gap, .smooth
-- **Named pattern classes:** recurring component styling (.stat-card, .metric-value, …)
-- **Accessibility:** :focus-visible, ::selection, browser UI
-
-**Component Styling Standards:**
-
-- Components compose token-mapped Tailwind utilities and named classes
-- No raw or arbitrary values — add a token instead
-- Any styling combo used more than once is promoted to a named class in globals.css
-- Variants select tokens/named classes; they never re-declare raw values
-
-**Reference:** the Styling Architecture Agreement and Styling Separation of Concerns sections above for complete patterns and examples.
-
-Generate:
-
-Folder structure
-
-Route structure
-
-Layouts
-
-Providers
-
-Feature folders
-
-Hooks
-
-Utilities
-
-Constants
-
-Contexts
-
-Stores
-
-API organization
-
-Component organization
-
-Shared libraries
-
-Design system package
-
-Asset organization
-
-Naming conventions
-
-Code splitting strategy
-
-Lazy loading
-
-Performance strategy
+Server Components by default; `"use client"` only where interaction demands it — in practice
+every screen that reads React Query, so sections are client and layouts and routes stay server
+where they can. Route-level code splitting is automatic.
 
 ---
 
-# PHASE 9 — Implementation Roadmap
+# Phase 9 — Implementation Roadmap
 
-Produce a complete implementation roadmap.
+**Lands in** [04-roadmap-and-qa.md](design-os/04-roadmap-and-qa.md) and
+[05-billing-cycle-plan.md](design-os/05-billing-cycle-plan.md).
 
-Include:
+Development phases · priority order · sprint breakdown · milestones · dependencies · risk
+assessment · technical-debt prevention · testing strategy · deployment readiness.
 
-Development phases
-
-Priority order
-
-Sprint breakdown
-
-Milestones
-
-Dependencies
-
-Risk assessment
-
-Technical debt prevention
-
-Testing strategy
-
-Deployment readiness
+Seven stages are delivered. The next body of work is the **billing cycle** — invoice
+generation, the scheduler, payment methods, password reset, and the two schema findings that
+block them (usage limits read from the wrong field; `@@unique([userId, status])` making
+billing history impossible). That plan carries its own open decisions; read it before starting
+any of it.
 
 ---
 
-# PHASE 10 — Quality Assurance
+# Phase 10 — Quality Assurance
 
-Review the entire system.
+**Lands in** [04-roadmap-and-qa.md](design-os/04-roadmap-and-qa.md).
 
-Validate:
+Validate: accessibility · consistency · responsiveness · scalability · performance · state
+coverage · error handling · loading behaviour · design-system compliance · frontend readiness ·
+developer experience · SEO · maintainability · cross-browser · WCAG.
 
-Accessibility
+**Verification gates:** `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build` — all green
+before merge.
 
-Consistency
+**Design-system QA is lint-enforced**, not reviewed by eye: no raw values, no arbitrary
+values, no repeated chains, variants select tokens, look-alikes share a class.
 
-Responsiveness
+**Accessibility QA:** every input labelled · `:focus-visible` rings from tokens · meters carry
+`role="progressbar"` with `aria-valuenow/min/max` · dialogs close on Escape and restore focus
+to the trigger · status is never colour-only · `prefers-reduced-motion` honoured globally.
 
-Scalability
-
-Performance
-
-State coverage
-
-Error handling
-
-Loading behavior
-
-Design system compliance
-
-Frontend readiness
-
-Developer experience
-
-SEO readiness
-
-Maintainability
-
-Cross-browser compatibility
-
-WCAG compliance
+**The standing lesson from this phase:** the most serious defects — a decorator ignoring its
+argument, an IDOR on invoices, a swallowed error `cause` — were invisible to reading,
+type-checking and linting. They appeared the first time a real request hit a real database.
+Static gates are necessary and not sufficient; run the thing.
 
 ---
 
-# PHASE 11 — Ancillary Documentation & Navigation
+# Phase 11 — Navigation & Orientation
 
-Generate supporting documentation that helps teams navigate and use the design OS.
+**Lands in** [design-os/README.md](design-os/README.md) and the [repo README](../README.md).
 
-This phase produces 6 navigation, reference, and setup documents.
+The generic template specified six ancillary files (START_HERE, README, DESIGN-OS-COMPLETE,
+ARTIFACT_INDEX, SETUP-CHECKLIST, IMPLEMENTATION_PROMPT) as navigation over a sixteen-file set.
+Meter's design OS is six documents. Six files do not need an index, a start-here and a
+separate artifact index — that scaffolding would be longer than the thing it indexes, and
+every line of it can drift out of sync with the code.
 
-## 11.1 — START_HERE.md
+Two files carry the whole job:
 
-**Purpose:** Quick entry point for new users discovering the design OS.
+- **[design-os/README.md](design-os/README.md)** — the table of the six documents, a
+  one-paragraph product summary, and where the rules live.
+- **[the repo README](../README.md)** — getting started, the contract workflow, the
+  authentication model, the layering table, and the styling layers.
 
-**Content:**
-
-- What the design OS contains (checklist of 10 phases)
-- File listing with purpose for each phase
-- Quick 3-step workflow (Read → Copy → Execute)
-- Next session instructions (copy IMPLEMENTATION_PROMPT.md)
-- Quick reference table (I want to... → Go to...)
-- Links to all phase artifacts (if published online)
-
-**Length:** ~150-200 lines
-
-**Tone:** Friendly, action-oriented, zero friction
+Setup lives in the repo README; the implementation guide is the phase documents themselves.
 
 ---
 
-## 11.2 — README.md
+## Output contract
 
-**Purpose:** 5-minute comprehensive overview. The "what is this?" document.
+**Location.** All design-OS documents are written into [`docs/design-os/`](design-os/) as
+individual `.md` files. Never concatenate them into one blob and never deliver a phase as a
+chat response only.
 
-**Content:**
+| Path                                                                                                  | Phases |
+| ----------------------------------------------------------------------------------------------------- | ------ |
+| [`docs/design-os/00-product-definition.md`](design-os/00-product-definition.md)                       | 1      |
+| [`docs/design-os/01-information-architecture.md`](design-os/01-information-architecture.md)           | 2–3    |
+| [`docs/design-os/02-page-and-component-blueprints.md`](design-os/02-page-and-component-blueprints.md) | 4–6    |
+| [`docs/design-os/03-frontend-architecture.md`](design-os/03-frontend-architecture.md)                 | 7–8    |
+| [`docs/design-os/04-roadmap-and-qa.md`](design-os/04-roadmap-and-qa.md)                               | 9–10   |
+| [`docs/design-os/README.md`](design-os/README.md)                                                     | 11     |
 
-- What this design OS is (30-second summary)
-- Quick start in 3 bullet points
-- Complete file listing with purpose for each (phases 1-10 + implementation files)
-- How to use for different roles (Product, Designers, Engineers, QA)
-- Key statistics (10 phases, {{COMPONENT_COUNT}}+ components, {{SECTION_COUNT}} sections, {{PAGE_COUNT}} pages, {{TIMELINE_WEEKS}} weeks, {{QA_ITEM_COUNT}}+ QA items)
-- Getting started (5-minute workflow)
-- Design OS philosophy (no ambiguity, no reinvention, production-ready)
+Work in progress that is not yet a phase gets its own numbered plan —
+[`05-billing-cycle-plan.md`](design-os/05-billing-cycle-plan.md) is the pattern: findings
+first, phased work second, open decisions listed explicitly at the end.
 
-**Length:** ~180-220 lines
+**Ordering.** Dependency order. A phase may reference the phases above it and must not
+contradict them.
 
-**Tone:** Professional, organized, reference-style
+**Formatting.** `#` title, `##` major section, `###` subsection · a table of contents in files
+over 250 lines · relative markdown links between documents and into the code they govern ·
+status or date stamps where a document records a decision.
 
----
-
-## 11.3 — DESIGN-OS-COMPLETE.md
-
-**Purpose:** Master index and summary. Single source of truth for what exists.
-
-**Content:**
-
-- Executive summary (what you have)
-- Complete list of all deliverables with descriptions:
-    - Phases 1-10 (brief 1-2 sentence description of each)
-    - Ancillary documents (6 files)
-    - Optional {{THEME_VARIANT}} (alternate theme/skin derived from the same tokens; N optional files)
-- Deliverable statistics
-- How to use this document (as an index)
-- Cross-references between phases
-- What's included vs. not included
-- Version/date information
-
-**Length:** ~250-300 lines
-
-**Tone:** Authoritative, index-style
+**Completion.** After writing, state which files changed and confirm the cross-links resolve.
 
 ---
 
-## 11.4 — ARTIFACT_INDEX.md
+## Critical rules
 
-**Purpose:** Detailed index with deep descriptions. Maps each phase to its use case.
-
-**Content:**
-
-- Full listing of all 10 phases with:
-    - Long description (3-4 sentences)
-    - Who needs it (role/persona)
-    - When to reference it (use cases)
-    - What it contains (key sections)
-    - How it flows to other phases (dependencies)
-- Implementation files (Phases 8-10) detailed breakdown
-- {{THEME_VARIANT}} index (if applicable)
-- Reading order recommendations (different paths for different roles)
-- Search keywords for each phase
-
-**Length:** ~300-350 lines
-
-**Tone:** Reference, detailed
+1. Never skip a phase, and never merge two.
+2. Never jump straight to UI.
+3. Every artifact is production-ready; vague descriptions are not deliverables.
+4. Maintain traceability — every decision references the phase above it.
+5. Think in systems, not pages.
+6. Explain design decisions, including the ones that were rejected.
+7. **Link documents to the code they govern.** A phase document that names no file is a
+   description; one that links the file is a contract.
+8. **Record deviations rather than omitting them silently** — a documented departure is a
+   decision, an undocumented one is a gap.
+9. **If a lint rule fires, the design is wrong.** Fix the design; do not add a disable
+   comment — `no-comments` will reject it anyway.
+10. Never add a dependency unilaterally.
 
 ---
 
-## 11.5 — SETUP-CHECKLIST.md
+## Deviations, recorded
 
-**Purpose:** Implementation setup walkthrough. Step-by-step guide to begin building.
+Where Meter departs from the generic template it was generated from, and why.
 
-**Content:**
-
-- Pre-implementation prerequisites
-    - Read these phases first (1, 3, 8)
-    - Understand these concepts (personas, navigation, components)
-- Environment setup (Node, pnpm, editor setup)
-- Project initialization
-    - Next.js setup commands
-    - Tailwind CSS configuration
-    - TypeScript configuration
-    - Folder structure creation (matching Phase 8)
-- Design tokens integration
-    - Set up CSS variables (Phase 7)
-    - Configure dark mode
-- Component library bootstrap
-    - Install the agreed dependencies (per the Library Selection Policy — confirm before installing)
-    - Create base component directory
-- Testing setup (unit / component + end-to-end, per the Library Selection Policy)
-- Developer workflow setup (git hooks, linting, formatting)
-- Verification checklist (everything installed and ready)
-
-**Length:** ~250-300 lines
-
-**Tone:** Instructional, numbered steps, practical
+| Departure                                                 | Reason                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **6 documents, not 16**                                   | The five phase files carry all 11 phases of content. Index scaffolding over six files exceeds what it indexes.                              |
+| **A third styling layer (`components.css`)**              | Pattern classes in `globals.css` would have doubled that file. The split also gives every breakpoint one home.                              |
+| **Response types hand-written in `lib/types/billing.ts`** | Nest emits request DTOs only. Recorded as the top-ranked gap with a known fix, not adopted as a pattern.                                    |
+| **Charts deferred**                                       | Usage history renders as a table. A charting library is a dependency decision, and there is no real series to plot until the database runs. |
+| **No component or E2E tests**                             | Both need new dependencies, which the Library Selection Policy says are proposed, not installed unilaterally.                               |
+| **`no-comments` extends the template's standards**        | Explanation belongs in these documents, where it is reviewable, not scattered through TSX where it rots.                                    |
 
 ---
 
-## 11.6 — IMPLEMENTATION_PROMPT.md
-
-**Purpose:** Complete implementation guide. Self-contained prompt for code building. All 10 phases synthesized into engineering action items.
-
-**Content:**
-
-- Overview (what this prompt does, how to use it)
-- References to Phases 1-7 (required reading before coding)
-- **Styling Architecture Principles** (REQUIRED NEW SECTION)
-    - Token-first model (tokens are the single source of truth)
-    - Globals.css responsibility (reset, tokens, typography, named utility & pattern classes)
-    - Component responsibility (compose token-mapped utilities + named classes)
-    - Component Styling Checklist:
-        - [ ] No raw values — every value comes from a token
-        - [ ] No arbitrary Tailwind values (`bg-[#...]`)
-        - [ ] No utility chain repeated more than once (promote to a named class)
-        - [ ] Variants select tokens/named classes, not raw values
-        - [ ] Look-alike components reference the same token/named class
-    - Decision guide: "Where should this style live?"
-    - Common anti-patterns and fixes
-- Phase 8 Implementation (Architecture setup)
-    - Folder structure (exact paths)
-    - Route structure (exact routes)
-    - Styling organization (globals.css structure + component standards)
-    - Providers and contexts
-    - Hooks organization
-    - Component organization
-- Phase 9 Implementation (Sprint breakdown)
-    - Sprint 1-8 breakdown ({{TIMELINE_WEEKS}} weeks total)
-    - What to build each sprint
-    - Which pages/components per sprint
-    - Dependencies and sequencing
-    - Milestones and deliverables
-    - **Styling compliance by sprint** (ensure each sprint components meet standards)
-- Phase 10 Implementation (QA checklist)
-    - Pre-launch QA items ({{QA_ITEM_COUNT}}+ items organized by category)
-    - **Styling QA checklist:**
-        - No raw or arbitrary values anywhere in components
-        - Every recurring pattern is a named class in globals.css
-        - Design tokens are the single source of truth
-        - Variants select tokens/named classes correctly
-        - Look-alike components share the same token/named class
-    - Accessibility verification
-    - Performance targets
-    - Browser compatibility
-    - Responsive design verification
-    - Component library completeness
-- Code patterns and standards
-    - **Component styling template** (token-mapped utilities + named classes)
-    - **Variant template** (CVA selecting tokens/named classes — no raw values)
-    - Component structure template
-    - Page template
-    - Hook patterns
-    - API integration patterns
-    - Error handling
-    - Loading states
-    - Empty states
-- Testing strategy
-    - Unit test coverage targets
-    - Integration test priorities
-    - E2E test scenarios
-    - Accessibility testing
-    - **Component styling tests** (verify sizing, colors, variants work)
-- Pre-merge checklist
-    - Styling checklist: no raw/arbitrary values; recurring patterns promoted to named classes
-- Deployment readiness
-- References to all other phases for context lookups
-
-**Length:** ~900-1300 lines (comprehensive, includes styling)
-
-**Tone:** Technical, directive, reference
-
----
-
-## 11.7 Output Requirements for Phase 11
-
-Generate exactly 6 markdown files:
-
-1. START_HERE.md
-2. README.md
-3. DESIGN-OS-COMPLETE.md
-4. ARTIFACT_INDEX.md
-5. SETUP-CHECKLIST.md
-6. IMPLEMENTATION_PROMPT.md
-
-All files must:
-
-- Cross-reference each other appropriately
-- Reference the 10 phases consistently
-- Use identical formatting conventions
-- Maintain consistent tone within each document type
-- Include version/date information
-- Include table of contents where applicable (files >250 lines)
-
----
-
-# Complete Deliverables Summary
-
-## Critical References
-
-**Styling Architecture Agreement** (see Technology Stack › Styling Architecture Agreement, and Design Philosophy › Styling Separation of Concerns) — the canonical rules for the token-first styling model: tokens as the single source of truth, recurring patterns as named classes in globals.css, no raw or arbitrary values. These rules apply throughout all 10 phases and implementation. All engineering must follow this agreement to prevent styling drift.
-
-## Phase 1-10: Core Design OS (10 files)
-
-- phase-1-product-vision.md
-- phase-2-experience-maps.md
-- phase-3-information-architecture.md
-- phase-4-page-blueprints.md
-- phase-5-section-blueprints.md
-- phase-6-component-library.md
-- phase-7-design-tokens.md
-- phase-8-frontend-architecture.md
-- phase-9-implementation-roadmap.md
-- phase-10-qa-checklist.md
-
-## Phase 11: Ancillary Documentation (6 files)
-
-- START_HERE.md
-- README.md
-- DESIGN-OS-COMPLETE.md
-- ARTIFACT_INDEX.md
-- SETUP-CHECKLIST.md
-- IMPLEMENTATION_PROMPT.md
-
-**Total: 16 files, all generated in one complete system**
-
----
-
-# Frontend Standards
-
-The resulting UI should be:
-
-- Minimal
-- Modern
-- Enterprise-grade
-- Premium
-- Spacious
-- Highly usable
-- Mobile-first
-- Responsive
-- Accessible
-- Fast
-- SEO-friendly
-- Conversion-focused
-
-Every page must support:
-
-- Skeleton loading
-- Empty states
-- Error states
-- Offline behavior where appropriate
-- Keyboard navigation
-- Screen reader compatibility
-- Smooth animations
-- Progressive enhancement
-
----
-
-# Cross-File Linking Requirements
-
-All 16 files must be interconnected:
-
-1. **Phase files** reference each other in logical progression (1→2→3...→10)
-2. **Ancillary files** reference phases for context (e.g., SETUP-CHECKLIST references Phase 8)
-3. **START_HERE.md** is the entry point, directing users to README and other files
-4. **IMPLEMENTATION_PROMPT.md** synthesizes all 10 phases into actionable engineering steps
-5. Consistent file naming, formatting, and structure across all 16 files
-
----
-
-# Critical Rules
-
-Never skip phases.
-
-Never jump directly into UI.
-
-Always explain design decisions.
-
-Maintain traceability between phases.
-
-Think in systems instead of pages.
-
-Optimize for engineering implementation.
-
-Avoid vague descriptions.
-
-Every artifact must be production-ready.
-
-All 16 files must be generated together as a cohesive system.
-
-When the design operating system is complete, the entire 16-file design operating system must be suitable for immediate handoff to frontend engineering teams.
-
----
-
-# Output Contract
-
-Before formatting, obey these delivery rules — they determine _where_ the deliverable lands, not just what it looks like.
-
-**Location.** Write all 16 files into `{{OUTPUT_DIR}}` as individual `.md` files. Never concatenate them into a single blob or a single chat response. Use these exact paths:
-
-- `{{OUTPUT_DIR}}/phase-1-product-vision.md` through `{{OUTPUT_DIR}}/phase-10-qa-checklist.md`
-- `{{OUTPUT_DIR}}/START_HERE.md`
-- `{{OUTPUT_DIR}}/README.md`
-- `{{OUTPUT_DIR}}/DESIGN-OS-COMPLETE.md`
-- `{{OUTPUT_DIR}}/ARTIFACT_INDEX.md`
-- `{{OUTPUT_DIR}}/SETUP-CHECKLIST.md`
-- `{{OUTPUT_DIR}}/IMPLEMENTATION_PROMPT.md`
-
-**Delivery mode.** One file per artifact, written to disk (via the environment's file-writing tool). Cross-links between files use relative paths within `{{OUTPUT_DIR}}`.
-
-**Ordering.** Generate in dependency order: phases 1→10 first (each referencing prior phases), then the 6 ancillary documents (which reference the phases).
-
-**Completion signal.** After all 16 files are written, emit a short manifest listing every file path produced and confirming cross-links resolve. Do not consider the task complete until the manifest is printed.
-
----
-
-# Output Format
-
-Generate all 16 markdown files (.md) with:
-
-- Consistent heading hierarchy (# = title, ## = major section, ### = subsection)
-- Table of contents for files >250 lines
-- Clear sections with consistent formatting
-- Cross-links between files (markdown links)
-- Version/date stamps
-- Consistent styling and tone within document types
-- Examples and illustrations where appropriate
-- Implementation notes for engineers
-
-Each file is self-contained but interconnected with the others.
-
-The complete package (all 16 files) is the final deliverable, suitable for enterprise handoff.
-
----
-
-**This updated prompt produces a complete, interconnected 16-file design operating system ready for production implementation.**
+_Meter · Design OS Brief · placeholders resolved 2026-08-27 · rewritten project-specific 2026-09-03_

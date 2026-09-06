@@ -10,6 +10,7 @@ Subscription billing & usage metering. Generated from
 | 02  | [Page & Component Blueprints](02-page-and-component-blueprints.md) | 4–6    | You are building a screen or a component                           |
 | 03  | [Tokens & Frontend Architecture](03-frontend-architecture.md)      | 7–8    | You need the layering rules or where a file goes                   |
 | 04  | [Roadmap & QA](04-roadmap-and-qa.md)                               | 9–10   | You want the known gaps or the pre-merge checklist                 |
+| 05  | [Billing Cycle Plan](05-billing-cycle-plan.md)                     | next   | You are implementing invoicing, the scheduler, payments or reset   |
 
 ## In one paragraph
 
