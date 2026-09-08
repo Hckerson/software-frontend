@@ -34,6 +34,7 @@ export const routes = {
     usageTrackUsage: () => "/api/usage/track",
     usageGetCurrentUsage: () => "/api/usage/current",
     usageGetUsageHistory: () => "/api/usage/history",
+    usageCheckAllLimits: () => "/api/usage/limits",
     usageCheckLimit: (metric: string) => `/api/usage/check-limit/${metric}`,
     billingGetBillingStats: () => "/api/admin/billing/stats",
     billingGetAllSubscriptions: () => "/api/admin/billing/subscriptions",
@@ -41,4 +42,14 @@ export const routes = {
         `/api/admin/billing/subscriptions/status/${status}`,
     billingGetOverdueInvoices: () => "/api/admin/billing/overdue-invoices",
     billingGetInvoiceStats: () => "/api/admin/billing/invoice-stats",
+    cycleRunAll: () => "/api/admin/billing/cycle/run",
+    cycleRenew: () => "/api/admin/billing/cycle/renew",
+    cycleSweepOverdue: () => "/api/admin/billing/cycle/sweep-overdue",
+    cycleIssueInvoice: (id: string) =>
+        `/api/admin/billing/cycle/subscriptions/${id}/issue-invoice`,
+    paymentMethodsList: () => "/api/payment-methods",
+    paymentMethodsAdd: () => "/api/payment-methods",
+    paymentMethodsSetDefault: (id: string) =>
+        `/api/payment-methods/${id}/default`,
+    paymentMethodsRemove: (id: string) => `/api/payment-methods/${id}`,
 } as const;

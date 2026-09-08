@@ -10,11 +10,28 @@ export const registerDtoSchema = z.object({
 });
 export type RegisterDto = z.infer<typeof registerDtoSchema>;
 
+export const authResponseUserDtoSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    role: z.enum(["ADMIN", "USER"]),
+});
+export type AuthResponseUserDto = z.infer<typeof authResponseUserDtoSchema>;
+
+export const authResponseDtoSchema = z.object({
+    user: authResponseUserDtoSchema,
+    accessToken: z.string().optional(),
+});
+export type AuthResponseDto = z.infer<typeof authResponseDtoSchema>;
+
 export const loginDtoSchema = z.object({
     email: z.string(),
     password: z.string(),
 });
 export type LoginDto = z.infer<typeof loginDtoSchema>;
+
+export const messageDtoSchema = z.object({ message: z.string() });
+export type MessageDto = z.infer<typeof messageDtoSchema>;
 
 export const forgotPasswordDtoSchema = z.object({ email: z.string() });
 export type ForgotPasswordDto = z.infer<typeof forgotPasswordDtoSchema>;
@@ -41,6 +58,21 @@ export const createUserDtoSchema = z.object({
 });
 export type CreateUserDto = z.infer<typeof createUserDtoSchema>;
 
+export const publicUserDtoSchema = z.object({
+    id: z.string(),
+    fullName: z.string(),
+    email: z.string(),
+    phoneNumber: z.string().nullable(),
+    avatar: z.string().nullable(),
+    bio: z.string().nullable(),
+    role: z.enum(["ADMIN", "USER"]),
+    status: z.enum(["ACTIVE", "PENDING", "SUSPENDED"]),
+    lastActive: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+});
+export type PublicUserDto = z.infer<typeof publicUserDtoSchema>;
+
 export const updateUserDtoSchema = z.object({
     fullName: z.string().optional(),
     email: z.string().optional(),
@@ -51,6 +83,33 @@ export const updateUserDtoSchema = z.object({
     status: z.enum(["ACTIVE", "PENDING", "SUSPENDED"]).optional(),
 });
 export type UpdateUserDto = z.infer<typeof updateUserDtoSchema>;
+
+export const adminStatsDtoSchema = z.object({
+    totalUsers: z.number(),
+    activeUsers: z.number(),
+    pendingUsers: z.number(),
+    suspendedUsers: z.number(),
+    activeSubscriptions: z.number(),
+    pastDueSubscriptions: z.number(),
+    canceledSubscriptions: z.number(),
+    overdueInvoices: z.number(),
+    timestamp: z.string(),
+});
+export type AdminStatsDto = z.infer<typeof adminStatsDtoSchema>;
+
+export const subscriptionPlanDtoSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    priceUSD: z.string(),
+    planType: z.enum(["FREE", "PRO", "ENTERPRISE"]),
+    features: z.record(z.string(), z.unknown()),
+    limits: z.record(z.string(), z.unknown()),
+    isActive: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+});
+export type SubscriptionPlanDto = z.infer<typeof subscriptionPlanDtoSchema>;
 
 export const createPlanDtoSchema = z.object({
     name: z.string(),
@@ -72,14 +131,137 @@ export const updatePlanDtoSchema = z.object({
 });
 export type UpdatePlanDto = z.infer<typeof updatePlanDtoSchema>;
 
+export const subscriptionDtoSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    planId: z.string(),
+    startDate: z.string(),
+    renewalDate: z.string(),
+    canceledAt: z.string().nullable(),
+    currentBillingPeriodStart: z.string(),
+    currentBillingPeriodEnd: z.string(),
+    status: z.enum(["ACTIVE", "PAST_DUE", "SUSPENDED", "CANCELED"]),
+    plan: subscriptionPlanDtoSchema.optional(),
+    user: publicUserDtoSchema.optional(),
+});
+export type SubscriptionDto = z.infer<typeof subscriptionDtoSchema>;
+
 export const selectPlanDtoSchema = z.object({ planId: z.string() });
 export type SelectPlanDto = z.infer<typeof selectPlanDtoSchema>;
 
 export const changePlanDtoSchema = z.object({ newPlanId: z.string() });
 export type ChangePlanDto = z.infer<typeof changePlanDtoSchema>;
 
+export const invoiceDtoSchema = z.object({
+    id: z.string(),
+    subscriptionId: z.string(),
+    userId: z.string(),
+    amount: z.string(),
+    stripeInvoiceId: z.string().nullable(),
+    paidDate: z.string().nullable(),
+    billingPeriodStart: z.string(),
+    billingPeriodEnd: z.string(),
+    dueDate: z.string(),
+    status: z.enum(["DRAFT", "SENT", "PAID", "FAILED", "OVERDUE"]),
+});
+export type InvoiceDto = z.infer<typeof invoiceDtoSchema>;
+
+export const upcomingInvoiceDtoSchema = z.object({
+    subscriptionId: z.string(),
+    amount: z.number(),
+    dueDate: z.string(),
+    billingPeriodStart: z.string(),
+    billingPeriodEnd: z.string(),
+    planName: z.string(),
+});
+export type UpcomingInvoiceDto = z.infer<typeof upcomingInvoiceDtoSchema>;
+
 export const trackUsageDtoSchema = z.object({
     metricType: z.enum(["API_CALLS", "STORAGE_GB", "SEATS"]),
     amount: z.number(),
 });
 export type TrackUsageDto = z.infer<typeof trackUsageDtoSchema>;
+
+export const usageLogDtoSchema = z.object({
+    id: z.string(),
+    subscriptionId: z.string(),
+    metricType: z.enum(["API_CALLS", "STORAGE_GB", "SEATS"]),
+    amount: z.number(),
+    period: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+});
+export type UsageLogDto = z.infer<typeof usageLogDtoSchema>;
+
+export const metricUsageDtoSchema = z.object({
+    metricType: z.enum(["API_CALLS", "STORAGE_GB", "SEATS"]),
+    amount: z.number(),
+    period: z.string(),
+});
+export type MetricUsageDto = z.infer<typeof metricUsageDtoSchema>;
+
+export const limitCheckDtoSchema = z.object({
+    metricType: z.enum(["API_CALLS", "STORAGE_GB", "SEATS"]),
+    limit: z.number().nullable(),
+    consumed: z.number(),
+    remainingQuota: z.number().nullable(),
+    percentageUsed: z.number(),
+    isAllowed: z.boolean(),
+});
+export type LimitCheckDto = z.infer<typeof limitCheckDtoSchema>;
+
+export const billingStatsDtoSchema = z.object({
+    activeSubscriptions: z.number(),
+    totalSubscriptions: z.number(),
+    churnRate: z.string(),
+    paidInvoices: z.number(),
+    overdueInvoices: z.number(),
+    timestamp: z.string(),
+});
+export type BillingStatsDto = z.infer<typeof billingStatsDtoSchema>;
+
+export const invoiceStatsDtoSchema = z.object({
+    total: z.number(),
+    paid: z.number(),
+    overdue: z.number(),
+    draft: z.number(),
+    paidPercentage: z.string(),
+});
+export type InvoiceStatsDto = z.infer<typeof invoiceStatsDtoSchema>;
+
+export const cycleRunSummaryDtoSchema = z.object({
+    examined: z.number(),
+    changed: z.number(),
+    skipped: z.number(),
+    details: z.array(z.string()),
+});
+export type CycleRunSummaryDto = z.infer<typeof cycleRunSummaryDtoSchema>;
+
+export const cycleRunAllDtoSchema = z.object({
+    renewal: cycleRunSummaryDtoSchema,
+    overdue: cycleRunSummaryDtoSchema,
+});
+export type CycleRunAllDto = z.infer<typeof cycleRunAllDtoSchema>;
+
+export const paymentMethodDtoSchema = z.object({
+    id: z.string(),
+    userId: z.string(),
+    last4Digits: z.string(),
+    expiryMonth: z.number(),
+    expiryYear: z.number(),
+    isDefault: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+});
+export type PaymentMethodDto = z.infer<typeof paymentMethodDtoSchema>;
+
+export const createPaymentMethodDtoSchema = z.object({
+    stripeToken: z.string(),
+    last4Digits: z.string(),
+    expiryMonth: z.number(),
+    expiryYear: z.number(),
+    isDefault: z.boolean().optional(),
+});
+export type CreatePaymentMethodDto = z.infer<
+    typeof createPaymentMethodDtoSchema
+>;

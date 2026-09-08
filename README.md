@@ -29,9 +29,10 @@ cd ../backend && pnpm openapi   # writes ../backend/openapi.json
 cd ../frontend && pnpm contract # regenerates lib/contract/{routes,schemas}.ts
 ```
 
-Nest emits **request** DTOs only, so response types are hand-written in `lib/types/billing.ts`
-to mirror the Prisma models. Adding `@ApiOkResponse({ type })` to the Nest handlers would
-generate those too — see the [roadmap](docs/design-os/04-roadmap-and-qa.md#known-gaps-ranked).
+Every backend operation declares its success shape, so **responses generate alongside
+requests**. `lib/types/` holds domain aliases over the generated schemas (`Subscription` for
+`SubscriptionDto`), not hand-written mirrors of the Prisma models — add a field to a Nest DTO
+and it propagates on the next `pnpm contract`.
 
 ## Authentication
 

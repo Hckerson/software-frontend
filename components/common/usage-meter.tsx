@@ -48,7 +48,7 @@ export default function UsageMeter({
                 className="usage-meter-track"
                 role="progressbar"
                 aria-label={label}
-                aria-valuenow={Math.round(percentage)}
+                aria-valuenow={Math.round(width)}
                 aria-valuemin={0}
                 aria-valuemax={FULL}
             >

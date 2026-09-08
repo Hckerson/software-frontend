@@ -1,6 +1,6 @@
 import UsageMeter from "@/components/common/usage-meter";
 import { METRIC_DESCRIPTORS } from "@/lib/data/metrics";
-import { usageFor } from "@/lib/utils/usage";
+import { limitFor, usageFor } from "@/lib/utils/usage";
 import type { MetricUsage, PlanLimits } from "@/lib/types";
 
 interface Props {
@@ -18,7 +18,7 @@ export default function MeterRow({ limits, usage }: Props) {
                     unit={descriptor.unit}
                     icon={descriptor.icon}
                     consumed={usageFor(usage, descriptor.metricType)}
-                    limit={limits[descriptor.metricType] ?? null}
+                    limit={limitFor(limits, descriptor.metricType)}
                 />
             ))}
         </div>
