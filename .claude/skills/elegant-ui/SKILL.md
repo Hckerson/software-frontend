@@ -147,7 +147,7 @@ The type scale is **marketing-grade** (`text-h1` 72px · `text-h2` 56px · `text
     FOCAL, DEVICE and DENSITY must name things present in the emitted JSX — a line pasteable into another project is a failed gate. **The `<h-token>` you name must appear verbatim as a class on the row element — or, for a rowless component, on the card root** (claiming `h-9` while shipping `py-2.5` is a failed gate), and each artifact must name **which field** it reads — two artifacts reading the same field are one kind. Sanctioned alternate branches: `FOCAL — <datum> ranked by <weight|color|case|column>; row register, no size jump` · `DENSITY — no rows; <component kind> at <h-token>; prose in <slot> only; artifacts: <kind→field>`. **No branch drops the `<h-token>` or the artifacts list** — those two clauses are unconditional. **Any `VETO:` line substitutes for the gate line it overrides** — a vetoed TEXTURE floor is declared, not silently dropped. **When an artifact you name does not exist yet, say so and build it** — this starter ships none of them, and citing a primitive that isn't there is a failed gate too. Then build in house tokens per the rules above.
 
 4. **Compact-field pass (route-wide, up front):** grep the route for `text-sm|text-base|text-lg` and demote every non-focal, non-title hit to `text-xs`, leaving exactly one focal value per card. Do this comprehensively in one sweep — never element-by-element.
-5. Self-check against the **Craft self-check** and **Anti-patterns**, then run `pnpm type-check` / lint if available.
+5. Self-check against the **Craft self-check** and **Anti-patterns**.
 
 ## Upgrade workflow
 
