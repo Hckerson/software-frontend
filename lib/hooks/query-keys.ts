@@ -16,6 +16,7 @@ export const queryKeys = {
     paymentMethods: ["payment-methods"] as const,
     usageLimit: (metric: UsageMetricType) =>
         ["usage", "limit", metric] as const,
+    admin: ["admin"] as const,
     adminStats: ["admin", "stats"] as const,
     billingStats: ["admin", "billing", "stats"] as const,
     invoiceStats: ["admin", "billing", "invoice-stats"] as const,

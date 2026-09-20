@@ -9,6 +9,7 @@ import ErrorState from "@/components/common/error-state";
 import StatusPill from "@/components/common/status-pill";
 import PeriodRange from "@/components/common/period-range";
 import SelectInput from "@/components/ui/forms/select-input";
+import IssueInvoiceButton from "@/components/sections/admin/issue-invoice-button";
 import { EMPTY_VALUE } from "@/lib/constants";
 import { SUBSCRIPTION_STATUS_OPTIONS } from "@/lib/data/status-options";
 import { useAdminSubscriptions } from "@/lib/hooks/use-admin";
@@ -39,6 +40,11 @@ const columns: Column<Subscription>[] = [
         key: "status",
         header: "Status",
         render: (row) => <StatusPill status={row.status} />,
+    },
+    {
+        key: "issue",
+        header: "Invoice",
+        render: (row) => <IssueInvoiceButton subscriptionId={row.id} />,
     },
 ];
 
