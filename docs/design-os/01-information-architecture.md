@@ -109,7 +109,7 @@ disabled, because a disabled control invites a support ticket.
 
 Route protection is client-side today: `session.isActive()` gates the `(app)` layout and
 `role` gates `/admin/*`. The JWT lives in `localStorage`, which the edge runtime cannot read,
-so `middleware.ts` cannot enforce this — see [Frontend Architecture](03-frontend-architecture.md#authentication-boundary)
+so `proxy.ts` cannot enforce this — see [Frontend Architecture](03-frontend-architecture.md#authentication-boundary)
 for the httpOnly-cookie migration this is deliberately staged behind.
 
 The backend is the real boundary: `JwtAuthGuard` + `RolesGuard` on every admin route. The

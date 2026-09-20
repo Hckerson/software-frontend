@@ -107,12 +107,12 @@ mutation leaves a row.
 `InvoiceGeneratorService` already computes amount, due date (period end + 14 days), overage and
 an invoice number. It is injected nowhere. The work is wiring and policy, not algorithms.
 
-| #   | Work                                                                                      | Notes                                                                                                                                                      |
-| --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued". |
-| B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | Depends on A1. Unlimited metric contributes zero.                                                                                                          |
-| B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                            |
-| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. Gives a way to exercise the path before the scheduler exists.               |
+| #   | Work                                                                                      | Notes                                                                                                                                                            |
+| --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued".       |
+| B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | Depends on A1. Unlimited metric contributes zero.                                                                                                                |
+| B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                                  |
+| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also has a UI**: an Issue invoice action per row on `/admin/subscriptions`. |
 
 ### Decision required — overage pricing
 
@@ -185,13 +185,13 @@ only issuance and delivery are missing.
 
 ## Phase F — Verification
 
-| #   | Work                                            | Notes                                                                                                                                            |
-| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| F1  | ~~`@ApiOkResponse({ type })` on every handler~~ | **Done.** All 49 operations declare a success shape; response schemas generate and `lib/types` is aliases over them.                             |
-| F2  | Collapse `GET /usage/current` to one shape      | It returns three today, normalised client-side in `lib/utils/usage.ts`.                                                                          |
-| F3  | ~~Component tests~~                             | **Done.** Vitest runs a jsdom `components` project; the `common/` components carrying a design principle are covered.                            |
-| F4  | E2E                                             | Playwright — **new dependency**. Would have caught every runtime bug found so far, and would let the UI be visually verified for the first time. |
-| F5  | Integration tests for the cycle                 | A seeded database, run the jobs, assert invoice and status transitions. Highest value per line of the lot.                                       |
+| #   | Work                                            | Notes                                                                                                                                                          |
+| --- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | ~~`@ApiOkResponse({ type })` on every handler~~ | **Done.** All 49 operations declare a success shape; response schemas generate and `lib/types` is aliases over them.                                           |
+| F2  | Collapse `GET /usage/current` to one shape      | It returns three today, normalised client-side in `lib/utils/usage.ts`.                                                                                        |
+| F3  | ~~Component tests~~                             | **Done.** Vitest runs a jsdom `components` project; the `common/` components carrying a design principle are covered.                                          |
+| F4  | ~~E2E~~                                         | **Done.** Playwright drives Chromium against the real proxy and UI; the API is stubbed per test, so the suite runs without a database.                         |
+| F5  | ~~Integration tests for the cycle~~             | **Done.** 15 tests in `test/cycle.e2e-spec.ts` against a real Postgres: issuance, renewal, the overdue sweep, both idempotency guarantees and the audit trail. |
 
 ---
 
@@ -242,19 +242,30 @@ cd frontend && pnpm dev
 
 ---
 
-## Still gated
+## Previously gated, now approved and built
 
-Everything else in this plan is implemented and verified. These three need a dependency the
-Library Selection Policy says must be approved, not installed unilaterally:
+All three dependencies were approved and installed.
 
-| Item                              | Dependency         | What it unlocks                                                                         |
-| --------------------------------- | ------------------ | --------------------------------------------------------------------------------------- |
-| Cron wiring for the cycle jobs    | `@nestjs/schedule` | The jobs run unattended instead of on an admin trigger                                  |
-| Email delivery for password reset | an email SDK       | The reset link reaches the customer; issuance, single-use and verification already work |
-| End-to-end tests                  | Playwright         | The UI verified in a browser for the first time                                         |
+| Item                              | Dependency           | State                                                                               |
+| --------------------------------- | -------------------- | ----------------------------------------------------------------------------------- |
+| Cron wiring for the cycle jobs    | `@nestjs/schedule@6` | `CycleScheduler` calls `runAll()` daily at 02:00; `BILLING_CYCLE_CRON=off` disables |
+| Email delivery for password reset | `nodemailer`         | `SmtpResetDelivery` behind `RESET_DELIVERY`; falls back to logging with no SMTP     |
+| End-to-end tests                  | `@playwright/test`   | Chromium drives the real UI with a real signed session; API stubbed, no database    |
 
-Component tests are no longer on this list: `jsdom` and `@testing-library/react` were approved
-and are wired into Vitest as a second project.
+Three things worth recording about how they went in:
+
+- **`@nestjs/schedule` v6, not v12.** v12 is ESM-only (`"type": "module"`) with no CJS build,
+  which the Jest harness — the one this project had to repair to exist at all — cannot parse.
+  v6 is the CJS major whose peer range is `^10 || ^11`, matching Nest 11 exactly.
+- **No advisory lock.** The obvious hardening for an in-process scheduler is
+  `pg_try_advisory_lock`, but those are _session_-scoped, and a Prisma connection pool gives no
+  guarantee the lock and the unlock land on the same connection. A lock that can silently leak
+  is worse than none. The jobs are idempotent by construction, which is the real safety
+  mechanism; `BILLING_CYCLE_CRON` designates a single runner when there is more than one
+  instance.
+- **The reset send is wrapped in try/catch.** `send` is only reached when the account exists,
+  so an uncaught SMTP failure would turn a 500 into an account-enumeration oracle and undo E4.
+  Failures are logged, and the response stays identical either way.
 
 Stripe remains out of scope; `stripeToken` and `stripeInvoiceId` are reference columns.
 Payment methods manage placeholder records until a processor is integrated.

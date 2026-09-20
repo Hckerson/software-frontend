@@ -208,7 +208,7 @@ announced, not merely coloured.**
 **Purpose:** the authenticated frame — sidebar, topbar, content. **Props:** none; reads
 `GET /users/me` for `role`.
 **Critical:** `role` decides **only whether the admin nav group renders. It never authorises.**
-Authorisation is [`middleware.ts`](../../middleware.ts) plus the backend's `RolesGuard`. Hiding
+Authorisation is [`proxy.ts`](../../proxy.ts) plus the backend's `RolesGuard`. Hiding
 a link is navigation, not security.
 **Styling:** `.app-shell` — and its responsive collapse is named there, not inlined.
 

@@ -267,25 +267,37 @@ identity change is not a profile edit and must not ride along in the same PATCH.
 
 ---
 
-## `admin/` — 6 sections
+## `admin/` — 8 sections
 
-Reachable only after [`middleware.ts`](../../middleware.ts) has verified an `ADMIN` claim
+Reachable only after [`proxy.ts`](../../proxy.ts) has verified an `ADMIN` claim
 server-side. **No section performs an authorisation check** — by the time one renders,
-authorisation has already happened twice (middleware, then the backend's `RolesGuard`).
+authorisation has already happened twice (the proxy, then the backend's `RolesGuard`).
 
-| Section                   | One job                              | Data                                            |
-| ------------------------- | ------------------------------------ | ----------------------------------------------- |
-| `admin-overview`          | Platform health at a glance          | `useAdminStats`, `useBillingStats`              |
-| `admin-invoice-health`    | Invoice health counters              | `useInvoiceStats`                               |
-| `admin-overdue-invoices`  | The overdue queue — the ops worklist | `useOverdueInvoices`                            |
-| `admin-plan-list`         | The catalogue, with lifecycle        | `usePlans`, `useSetPlanActive`, `useDeletePlan` |
-| `admin-plan-form`         | Create a plan                        | `useCreatePlan`                                 |
-| `admin-subscription-list` | Subscription oversight, filtered     | `useAdminSubscriptions`                         |
+| Section                   | One job                              | Data                                                              |
+| ------------------------- | ------------------------------------ | ----------------------------------------------------------------- |
+| `admin-overview`          | Platform health at a glance          | `useAdminStats`, `useBillingStats`                                |
+| `admin-invoice-health`    | Invoice health counters              | `useInvoiceStats`                                                 |
+| `admin-overdue-invoices`  | The overdue queue — the ops worklist | `useOverdueInvoices`                                              |
+| `admin-plan-list`         | The catalogue, with lifecycle        | `usePlans`, `useSetPlanActive`, `useDeletePlan`                   |
+| `admin-plan-form`         | Create a plan                        | `useCreatePlan`                                                   |
+| `admin-subscription-list` | Subscription oversight, filtered     | `useAdminSubscriptions`                                           |
+| `admin-cycle-controls`    | Run the billing cycle by hand        | `useRunCycle`, `useRenewSubscriptions`, `useSweepOverdueInvoices` |
+| `issue-invoice-button`    | Issue one subscription's invoice     | `useIssueInvoice`                                                 |
 
 **`admin-plan-list`** carries the catalogue's two lifecycle rules, both of which are business
 rules before they are UI: **deactivating a plan must not cascade** to the subscriptions
 referencing it, and **deletion double-confirms** because a plan with history should be
 deactivated instead. Both actions route through `ConfirmDialog`.
+
+**`admin-cycle-controls`** is the console's only platform-mutating surface. It exists because
+the cycle endpoints were reachable only by `curl` — the manual trigger built in
+[Phase B4](05-billing-cycle-plan.md#phase-b--invoice-generation) had no operator. Each of the
+three actions states what it will change in a `ConfirmDialog` before running, and the result
+renders as a `cycle-run-report` per half (renewal, overdue sweep) so an operator can see what
+moved. The jobs are idempotent server-side, so the confirm step is about intent, not safety.
+
+**`issue-invoice-button`** owns its own mutation per row rather than lifting state into the
+table, which keeps `admin-subscription-list`'s columns a module constant.
 
 **`admin-overdue-invoices`** is reused on `/admin` and `/admin/invoices` — the ops overview and
 the invoice screen show the same queue rather than two queries that can disagree.

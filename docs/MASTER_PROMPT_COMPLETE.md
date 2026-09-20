@@ -309,7 +309,7 @@ code it governs.
 | Phases | Document                                                                   | Governs                                      |
 | ------ | -------------------------------------------------------------------------- | -------------------------------------------- |
 | 1      | [00-product-definition.md](design-os/00-product-definition.md)             | Personas, business rules, design principles  |
-| 2–3    | [01-information-architecture.md](design-os/01-information-architecture.md) | `lib/data/navigation.ts`, `middleware.ts`    |
+| 2–3    | [01-information-architecture.md](design-os/01-information-architecture.md) | `lib/data/navigation.ts`, `proxy.ts`         |
 | 4      | [02-page-blueprints.md](design-os/02-page-blueprints.md)                   | `app/`                                       |
 | 5      | [06-section-blueprints.md](design-os/06-section-blueprints.md)             | `components/sections/`                       |
 | 6      | [07-component-library.md](design-os/07-component-library.md)               | `components/common/`, `layout/`, `ui/forms/` |
@@ -386,7 +386,7 @@ weigh changes against it first.
 
 **Lands in** [01-information-architecture.md](design-os/01-information-architecture.md).
 **Governs** [`lib/data/navigation.ts`](../lib/data/navigation.ts) and
-[`middleware.ts`](../middleware.ts).
+[`proxy.ts`](../proxy.ts).
 
 Using the experience maps, design:
 
@@ -641,7 +641,7 @@ strategy · Lazy loading · Performance strategy.
 ### Settled for Meter — folder structure
 
 ```
-middleware.ts            server-side route + admin gate
+proxy.ts                 server-side route + admin gate
 app/
   layout.tsx  page.tsx  not-found.tsx  error.tsx
   auth/       layout.tsx + login | register | forgot-password | reset-password
@@ -705,7 +705,7 @@ Tokens are signed **RS256**. The backend holds the private key; this app is give
 public half (`AUTH_JWT_PUBLIC_KEY`), so nothing secret crosses the boundary and the two
 services stay independently deployable.
 
-[`middleware.ts`](../middleware.ts) runs before render and rejects any token whose signature
+[`proxy.ts`](../proxy.ts) runs before render and rejects any token whose signature
 fails, whose `alg` is not `RS256` (closing the `alg: none` downgrade), or whose `exp` has
 passed; redirects unauthenticated visitors to `/auth/login?next=<path>`; keeps non-admins out
 of `/admin/*`; bounces signed-in visitors away from `/auth/*`. It **fails closed** — an unset
@@ -750,8 +750,8 @@ retroactively invent a week count.
 | 3     | Product definition settled; IA, blueprints, architecture recorded                                        |
 | 4     | App shell, auth, route protection, hooks for every endpoint group                                        |
 | 5     | Customer surfaces (dashboard, plans, subscription, usage, invoices, settings) and admin surfaces         |
-| 6     | Auth moved to an httpOnly cookie; `middleware.ts` enforces routes and admin access server-side           |
-| 7     | RS256 keypair signing; middleware verifies signatures with WebCrypto, no shared secret                   |
+| 6     | Auth moved to an httpOnly cookie; `proxy.ts` enforces routes and admin access server-side                |
+| 7     | RS256 keypair signing; the proxy verifies signatures with WebCrypto, no shared secret                    |
 | 8     | Response schemas on all 49 backend operations; frontend types generated end to end; Vitest renders React |
 
 **Next body of work — the billing cycle:** invoice generation, the scheduler, payment methods,

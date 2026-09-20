@@ -286,7 +286,7 @@ The layer people skip until something inexplicable happens. Every developer even
 | **Load balancer / reverse proxy** | A front door that spreads traffic across servers, terminates TLS, and hides your topology (nginx, Caddy, or your host's).                                                                                                            |
 | **Edge functions**                | Small bits of your code running at the CDN, close to the user — redirects, auth checks, A/B splits — before the request ever reaches the origin.                                                                                     |
 
-**In your repo** — `middleware.ts` runs at the edge on every matching request, the cheapest possible place to bounce a logged-out user · `lib/constants.ts` holds `config.api.*` so no URL is ever typed twice.
+**In your repo** — `proxy.ts` runs on every matching request, the cheapest possible place to bounce a logged-out user · `lib/constants.ts` holds `config.api.*` so no URL is ever typed twice.
 
 ---
 

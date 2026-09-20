@@ -17,8 +17,13 @@ pnpm dev
 The API lives in the sibling [`../backend`](../backend) repo (NestJS + Prisma + Postgres).
 Start it with `pnpm start:dev` there; it listens on port 5000.
 
-Scripts: `pnpm dev` · `build` · `start` · `type-check` · `lint` · `test` · `format` ·
-`contract`.
+Scripts: `pnpm dev` · `build` · `start` · `type-check` · `lint` · `test` · `test:e2e` ·
+`format` · `contract`.
+
+`pnpm test` runs two Vitest projects — `node` for tooling, logic and auth verification, and
+`react` in jsdom for components and hooks. `pnpm test:e2e` runs Playwright against a dev
+server; it stubs the API at the network layer, so it needs no backend and no database. The
+browser is installed once with `npx playwright install chromium`.
 
 ## The API contract is generated, not written
 
@@ -40,8 +45,9 @@ The JWT is held in an **httpOnly cookie** set by the backend; no token is ever s
 `localStorage` and there is no client-side session state.
 
 Tokens are signed **RS256** with an RSA keypair. The backend holds the private key; this app
-gets only the public half, so [`middleware.ts`](middleware.ts) **verifies the signature** with
-WebCrypto before render — no shared secret, and no dependency. It redirects unauthenticated
+gets only the public half, so [`proxy.ts`](proxy.ts) **verifies the signature** with
+WebCrypto before render — no shared secret, and no dependency. (The file is named `proxy.ts`
+because Next.js 16 renamed the `middleware` convention; the export is `proxy`.) It redirects unauthenticated
 visitors to `/auth/login?next=<path>`, keeps non-admins out of `/admin/*`, and fails closed if
 the key is unset. Authorization is still enforced independently by `JwtAuthGuard` +
 `RolesGuard` on the backend.
