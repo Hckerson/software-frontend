@@ -3,12 +3,13 @@ import SectionCard from "@/components/common/section-card";
 import DetailRow from "@/components/common/detail-row";
 import StatusPill from "@/components/common/status-pill";
 import Skeleton from "@/components/common/skeleton";
+import ErrorState from "@/components/common/error-state";
 import { EMPTY_VALUE } from "@/lib/constants";
 import { formatDate, titleCase } from "@/lib/utils/format";
 import { useCurrentUser } from "@/lib/hooks/use-account";
 
 export default function AccountDetails() {
-    const { data, isPending } = useCurrentUser();
+    const { data, isPending, isError, error, refetch } = useCurrentUser();
 
     return (
         <SectionCard
@@ -16,6 +17,10 @@ export default function AccountDetails() {
             description="Managed by your administrator."
         >
             {isPending && <Skeleton lines={4} />}
+
+            {isError && (
+                <ErrorState error={error} onRetry={() => void refetch()} />
+            )}
 
             {data && (
                 <dl className="flex flex-col">
