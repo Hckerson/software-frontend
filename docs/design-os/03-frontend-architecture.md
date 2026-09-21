@@ -43,10 +43,10 @@ app/
   (app)/      layout.tsx + dashboard | plans | subscription | usage
               | invoices/[id] | settings | admin/*
 components/
-  common/     Button, PageHeader, SectionCard, StatCard, StatusPill,
-              UsageMeter, DataTable, EmptyState, ErrorState, Skeleton,
-              ConfirmDialog, Money, PeriodRange
-  layout/     Sidebar, SidebarNav, Topbar
+  common/     Button, LinkButton, PageHeader, SectionCard, StatCard, StatusPill,
+              UsageMeter, DataTable, DetailRow, EmptyState, ErrorState, Skeleton,
+              ConfirmDialog, Money, PeriodRange, FormField
+  layout/     AppShell, Sidebar, SidebarGroup, Topbar, ThemeToggle, AuthCard
   sections/   one folder per route; each file is a composable section
   ui/forms/   existing input primitives
   providers/  Provider (React Query)

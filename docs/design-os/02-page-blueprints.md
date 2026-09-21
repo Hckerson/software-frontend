@@ -169,7 +169,7 @@ itself.**
 | Route                  | Modules                                                              | Data                                                                          |
 | ---------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `/admin`               | `admin-overview` · `admin-cycle-controls` · `admin-overdue-invoices` | `GET /admin/stats`, `GET /admin/billing/stats`, `POST .../cycle/*`            |
-| `/admin/plans`         | `admin-plan-list` · `admin-plan-form`                                | `GET /billing/plans` + create · activate · deactivate · delete                |
+| `/admin/plans`         | `admin-plan-list` · `admin-plan-edit` · `admin-plan-form`            | `GET /billing/plans` + create · edit · activate · deactivate · delete         |
 | `/admin/subscriptions` | `admin-subscription-list` · `issue-invoice-button`                   | `GET /admin/billing/subscriptions[/status/:status]`, `POST .../issue-invoice` |
 | `/admin/invoices`      | `admin-invoice-health` · `admin-overdue-invoices`                    | `GET /admin/billing/overdue-invoices`, `GET /admin/billing/invoice-stats`     |
 
@@ -179,7 +179,9 @@ confirm step**, and both are idempotent server-side, so a double click cannot do
 
 **Catalogue rules, business before UI:** **deactivating a plan must not cascade** to the
 subscriptions referencing it, and **deletion double-confirms** — a plan with history should be
-deactivated instead.
+deactivated instead. **Editing does not cascade either**: a price or limit change applies to a
+subscription when it renews, never retroactively, which is why editing needs no confirm step
+while its two neighbours do.
 **Note:** `admin-overdue-invoices` is composed on both `/admin` and `/admin/invoices`, so the
 two screens cannot show different queues.
 

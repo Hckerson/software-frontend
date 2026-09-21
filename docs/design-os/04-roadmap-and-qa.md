@@ -35,24 +35,29 @@ The three dependency-gated gaps were approved and are now implemented.
 3. **E2E tests exist.** Playwright drives Chromium against `next dev`, minting a real RS256
    session with a keypair generated per run, so [`proxy.ts`](../../proxy.ts)'s signature
    verification is exercised rather than stubbed. The API is stubbed at the network layer, so
-   the suite needs no database.
+   the suite needs no database. The backend gained its own suite too: 19 integration tests
+   against a real Postgres.
+4. **Overage is billed.** `SubscriptionPlan.overageRates` prices each metric per unit.
+   **A metric with a rate may exceed its limit and is billed for the excess; a metric without
+   one stays a hard cap**, so option 2 is a superset of option 1 rather than a replacement and
+   every existing plan is unchanged. `OverageCalculatorService` is the only place overage
+   becomes money, shared by the cycle and the upcoming-invoice estimate so a customer's
+   preview and their bill cannot disagree. Verified live: 100,000 API calls over at `$0.0002`
+   bills `$20` on top of a `$49` plan, while a seat past the cap is still refused.
 
 ## Known gaps, ranked
 
-1. **Overage is not billed.** Implemented as option 1 — exceeding a limit blocks the request.
-   The overage call site exists and is passed a zero rate; billing for overage means adding
-   `overageRates` to `SubscriptionPlan`. **Product decision, not a technical one.**
-2. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
+1. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
    `stripeInvoiceId` are reference columns.
-3. **No admin user management.** `usersFindAll`, `usersFindOne` and `usersRemove` are generated
+2. **No admin user management.** `usersFindAll`, `usersFindOne` and `usersRemove` are generated
    into the contract but consumed nowhere, because no admin users screen is blueprinted. Per
    the Phase 2 rule, that screen needs an [experience map](01-information-architecture.md)
    before it gets a route — recorded here so the unused routes read as a decision.
-4. **The scheduler is in-process.** `@nestjs/schedule` runs in every instance, so a multi-instance
+3. **The scheduler is in-process.** `@nestjs/schedule` runs in every instance, so a multi-instance
    deployment must set `BILLING_CYCLE_CRON=off` on all but one. No advisory lock was added: the
    jobs are idempotent by construction, and a Prisma connection pool cannot hold a session-level
    advisory lock across two queries, so a lock would have promised more than it delivered.
-5. **Charts deferred.** Usage history renders as a table.
+4. **Charts deferred.** Usage history renders as a table.
 
 ## Found by the new tests
 
@@ -158,8 +163,8 @@ one file.
 | ------------ | --------------------------- | ----------------- |
 | `lint`       | 0 (incl. 7 custom rules)    | 0                 |
 | `type-check` | 0                           | 0                 |
-| `test`       | 163, two Vitest projects    | 41, Jest          |
-| `test:e2e`   | 11, Playwright, no database | 16, real Postgres |
+| `test`       | 181, two Vitest projects    | 48, Jest          |
+| `test:e2e`   | 11, Playwright, no database | 19, real Postgres |
 | `build`      | 17 routes                   | clean             |
 
 `pnpm test` runs both Vitest projects: `node` for tooling, logic and auth verification, and

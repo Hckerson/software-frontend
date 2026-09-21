@@ -18,7 +18,7 @@ expressed twice.
 - [`auth/`](#auth--4-sections) · [`dashboard/`](#dashboard--3-sections) ·
   [`usage/`](#usage--3-sections) · [`plans/`](#plans--3-sections) ·
   [`subscription/`](#subscription--4-sections) · [`invoices/`](#invoices--3-sections) ·
-  [`settings/`](#settings--5-sections) · [`admin/`](#admin--6-sections) ·
+  [`settings/`](#settings--5-sections) · [`admin/`](#admin--11-sections) ·
   [`landing/`](#landing--2-sections)
 - [Reuse graph](#reuse-graph)
 
@@ -48,6 +48,14 @@ rung is a defect:
 2. `isError` → `<ErrorState error onRetry={refetch} />`, carrying the `ApiError` message
 3. no data → `<EmptyState>` with the single action that resolves it
 4. success → content
+
+**Four sections omit a rung for a stated reason.** They are exceptions, not oversights, and
+are listed here so an audit does not re-raise them: `invoice-detail` has no empty state
+because a `403` must render as an error and never as an empty invoice; `profile-form` and
+`account-details` have none because `GET /users/me` cannot return nothing on an authenticated
+route; `admin-overview` and `admin-invoice-health` have none because a counter is always
+present, zero included. **Nothing omits the error rung** — a failed read that renders as an
+empty state tells the customer something false about their billing.
 
 **Accessibility.** Inherited from the components a section composes; a section adds no bare
 interactive element of its own. Status is a word via `StatusPill`, never colour alone.
@@ -102,7 +110,7 @@ Composed into [`/dashboard`](02-page-blueprints.md#dashboard--customer-overview)
 The order is the blueprint: **the meter row is first because E2 is the loop the product lives
 on.**
 
-### `usage-summary` — _also the first section of `/usage`_
+### `usage-summary` — _lives in `usage/`; blueprinted here because `/dashboard` composes it first_
 
 **One job:** answer _am I within my limits_ before anything else renders.
 **Data:** `useCurrentSubscription`, then `useCurrentUsage(enabled: Boolean(subscription.data))`
@@ -117,7 +125,7 @@ point and the most important empty state in the product.
 
 **One job:** state the current plan and its billing period.
 **Data:** `useCurrentSubscription`. **Composes:** `SectionCard`, `SubscriptionFacts`,
-`Skeleton`, `EmptyState`.
+`Skeleton`, `EmptyState`, `ErrorState`.
 **Notes:** delegates every fact to `SubscriptionFacts` so the dashboard tile and
 `/subscription` cannot disagree about how a plan is described.
 
@@ -125,7 +133,9 @@ point and the most important empty state in the product.
 
 **One job:** state what is owed and when.
 **Data:** `useCurrentSubscription` + `useUpcomingInvoice`. **Composes:** `SectionCard`,
-`DetailRow`, `Money`, `Skeleton`, `EmptyState`.
+`DetailRow`, `Money`, `Skeleton`, `EmptyState`, `ErrorState`.
+**States:** either query failing renders `ErrorState`. Without that rung a failed estimate
+renders _"Nothing due yet"_, which states a fact the system does not have.
 **Notes:** the estimate is a projection, not an issued invoice — label it as such. Amounts
 render through `Money`, never a hand-formatted string.
 
@@ -267,7 +277,7 @@ identity change is not a profile edit and must not ride along in the same PATCH.
 
 ---
 
-## `admin/` — 8 sections
+## `admin/` — 11 sections
 
 Reachable only after [`proxy.ts`](../../proxy.ts) has verified an `ADMIN` claim
 server-side. **No section performs an authorisation check** — by the time one renders,
@@ -282,7 +292,10 @@ authorisation has already happened twice (the proxy, then the backend's `RolesGu
 | `admin-plan-form`         | Create a plan                        | `useCreatePlan`                                                   |
 | `admin-subscription-list` | Subscription oversight, filtered     | `useAdminSubscriptions`                                           |
 | `admin-cycle-controls`    | Run the billing cycle by hand        | `useRunCycle`, `useRenewSubscriptions`, `useSweepOverdueInvoices` |
+| `admin-plan-edit`         | Change an existing plan              | `useUpdatePlan`                                                   |
+| `cycle-run-report`        | Report one cycle half (pure)         | none — props                                                      |
 | `issue-invoice-button`    | Issue one subscription's invoice     | `useIssueInvoice`                                                 |
+| `plan-metric-fields`      | The per-metric limit and rate inputs | none — props                                                      |
 
 **`admin-plan-list`** carries the catalogue's two lifecycle rules, both of which are business
 rules before they are UI: **deactivating a plan must not cascade** to the subscriptions
@@ -295,6 +308,24 @@ the cycle endpoints were reachable only by `curl` — the manual trigger built i
 three actions states what it will change in a `ConfirmDialog` before running, and the result
 renders as a `cycle-run-report` per half (renewal, overdue sweep) so an operator can see what
 moved. The jobs are idempotent server-side, so the confirm step is about intent, not safety.
+
+**`admin-plan-edit`** is the catalogue's edit half, and the reason
+[E5](01-information-architecture.md#e5--administer-the-catalog-billing-admin) reads as
+delivered rather than as a promise. It renders as a dialog over `admin-plan-list`, is mounted
+only while a row is selected and keyed by plan id, so its fields seed from props and need no
+reset effect — the same pattern as `profile-fields`. It closes on Escape and moves focus to
+the panel. **It does not confirm**, because editing a plan is reversible and
+[does not cascade](02-page-blueprints.md#admin) to the subscriptions referencing it; the
+irreversible neighbours (deactivate, delete) do.
+
+**`plan-metric-fields`** is the six limit and overage-rate inputs, extracted because
+`admin-plan-form` and `admin-plan-edit` must offer identical fields — an edit form that
+described a limit differently from the create form would be a drift bug with a customer's
+money on the other end. Pure; the draft-to-payload conversion lives in
+[`lib/utils/plan-draft.ts`](../../lib/utils/plan-draft.ts).
+
+**`cycle-run-report`** renders one half of a cycle run (renewal, overdue sweep) so an operator
+can see what moved. Pure, and composed twice by `admin-cycle-controls`.
 
 **`issue-invoice-button`** owns its own mutation per row rather than lifting state into the
 table, which keeps `admin-subscription-list`'s columns a module constant.
@@ -318,8 +349,8 @@ The **only** sections permitted the editorial register; every other section is b
 
 ## Reuse graph
 
-Ten sections compose another section. Every edge exists to stop two surfaces describing the
-same record differently.
+Fifteen sections compose another section. Every edge exists to stop two surfaces describing
+the same record differently.
 
 ```
 usage-summary ──────────→ meter-row              the hero, composed on 2 routes
@@ -331,9 +362,13 @@ plan-catalog ───────────→ plan-card ──→ plan-featu
 landing-plans ──────────→ plan-feature-list      public preview = authenticated catalogue
 payment-methods ────────→ payment-method-row
 profile-form ───────────→ profile-fields
+admin-plan-list ────────→ admin-plan-edit ──→ plan-metric-fields
+admin-plan-form ────────→ plan-metric-fields     create form = edit form
+admin-cycle-controls ───→ cycle-run-report       composed twice, once per half
+admin-subscription-list → issue-invoice-button   one mutation per row
 ```
 
 **A section imported by two others is a shared description and must stay pure.** If one of
-`subscription-facts`, `invoice-table`, `plan-feature-list`, `meter-row` or `payment-method-row`
-grows a hook, the two surfaces above it start fetching independently and are free to disagree —
+`subscription-facts`, `invoice-table`, `plan-feature-list`, `meter-row`, `payment-method-row`
+or `plan-metric-fields` grows a hook, the two surfaces above it start fetching independently and are free to disagree —
 which is the drift this layer exists to prevent.

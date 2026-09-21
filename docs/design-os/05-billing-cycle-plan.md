@@ -3,15 +3,18 @@
 Turns the console from one that _displays_ billing into one that _does_ billing.
 References [Roadmap & QA](04-roadmap-and-qa.md) and [Product Definition](00-product-definition.md).
 
-Status: **implemented 2026-09-03**, except the four dependency-gated items listed under
-[Still gated](#still-gated). Verified against a live Postgres, API and web server.
+Status: **implemented 2026-09-03**. The three dependency-gated items are approved and built —
+see [Previously gated, now approved and built](#previously-gated-now-approved-and-built).
+Verified against a live Postgres, API and web server.
 
 Two blocking decisions were taken as **stated assumptions** rather than stalling the work:
 
-- **Overage pricing → option 1 (no overage).** Exceeding a limit blocks the request; invoices
-  are the flat plan price. `calculateOverageCharge` is wired but called with a zero rate, so
-  switching to option 2 means adding `overageRates` to the plan and passing it through — the
-  call site already exists.
+- **Overage pricing → option 2 (bill for overage).** ~~Option 1~~ was the stated assumption
+  until the decision was taken; `SubscriptionPlan.overageRates` now carries a price per unit
+  per metric. **A metric with a rate may exceed its limit and is billed for the excess; a
+  metric with no rate stays a hard cap.** That makes option 2 a superset of option 1 rather
+  than a replacement — a plan can price API calls and still cap seats, and every plan carrying
+  `overageRates: {}` behaves exactly as it did before.
 - **Scheduler shape → idempotent service methods behind admin triggers.** No cron dependency
   was added. `CycleService` exposes `renewDueSubscriptions`, `markOverdueInvoices` and
   `issueInvoiceForPeriod`; `POST /admin/billing/cycle/*` calls them. Adding `@nestjs/schedule`
@@ -107,14 +110,14 @@ mutation leaves a row.
 `InvoiceGeneratorService` already computes amount, due date (period end + 14 days), overage and
 an invoice number. It is injected nowhere. The work is wiring and policy, not algorithms.
 
-| #   | Work                                                                                      | Notes                                                                                                                                                            |
-| --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued".       |
-| B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | Depends on A1. Unlimited metric contributes zero.                                                                                                                |
-| B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                                  |
-| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also has a UI**: an Issue invoice action per row on `/admin/subscriptions`. |
+| #   | Work                                                                                      | Notes                                                                                                                                                                                                |
+| --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued".                                           |
+| B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | **Done.** `OverageCalculatorService` is the single place overage becomes money, shared by the cycle and the upcoming-invoice estimate so the two cannot disagree. Unlimited metric contributes zero. |
+| B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                                                                      |
+| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also has a UI**: an Issue invoice action per row on `/admin/subscriptions`.                                     |
 
-### Decision required — overage pricing
+### Decision taken — overage pricing (option 2)
 
 **Nothing in the schema models an overage rate.** `calculateOverageCharge(usage, limit, ratePerUnit)`
 takes a rate the system cannot supply. Options:
@@ -125,9 +128,14 @@ takes a rate the system cannot supply. Options:
    (e.g. `{ "API_CALLS": 0.0001 }`). Requires a migration and admin-form fields.
 3. **Hard cap with upgrade prompt** — block, but surface the upgrade path in the UI.
 
-Option 1 is the smallest honest step and matches [Phase 1's non-goals](00-product-definition.md#non-goals).
-Option 2 is what "metered billing" usually implies. **This is a product decision, not a
-technical one, and Phase B cannot be finished without it.**
+**Resolved: option 2.** Option 1 was the smaller step, but the product is called Meter and the
+README promises usage metering — a console that blocks at the limit is a quota system, not a
+metered-billing one. Closing that gap between the name and the behaviour was worth a migration.
+
+Implemented per metric rather than per plan, so option 1 survives wherever it is the right
+answer: `overageRates: {}` is still a hard cap everywhere, and the seeded Free plan keeps it.
+Sequenced deliberately **after** F5, because billing for overage means being right about usage
+accounting, and that is not a step to take on an untested cycle.
 
 ---
 
@@ -160,11 +168,18 @@ The `PaymentMethod` model and repo exist; there are **zero endpoints**.
 | D1  | `PaymentMethodsModule` — list / add / set-default / remove | Every handler scoped to the caller via `assertCanActOn`. Given two IDORs already found in this codebase, ownership is the design centre here, not an afterthought. |
 | D2  | Never return `stripeToken`                                 | Same `omit` pattern as `PublicUser`. Expose only `last4Digits`, `expiryMonth/Year`, `isDefault`.                                                                   |
 | D3  | Enforce exactly one default                                | Setting a new default clears the previous one in a transaction.                                                                                                    |
-| D4  | Frontend `/settings` section                               | `PaymentMethodList` + add form, reusing existing primitives.                                                                                                       |
+| D4  | Frontend `/settings` section                               | **Partly delivered.** `payment-methods` + `payment-method-row` list, set default and remove. **No add form**, deliberately — see below.                            |
 
 Card data never touches this system — `stripeToken` is a reference. Without a processor, "add
 card" means storing a token from a client-side integration. **Until Stripe is in scope, D1–D4
 can only manage placeholder records**, which is worth being clear-eyed about before building it.
+
+**This is why there is no add-card form.** `useAddPaymentMethod` and `POST /payment-methods`
+both exist and work; the missing piece is deliberately the UI, because a form that invents a
+placeholder token would tell a customer their card is on file when nothing was tokenised. The
+section's empty state names the gap rather than hiding it. **Build the form in the same change
+as the Stripe integration, not before** — the unconsumed hook is the record of this decision,
+not an oversight.
 
 ---
 
@@ -211,17 +226,19 @@ run in parallel or be dropped without affecting it.
 
 ---
 
-## Decisions needed before starting
+## Decisions, and how they went
 
-1. **Overage pricing** — block at limit (option 1), or model rates and bill for overage
-   (option 2)? Blocks Phase B.
-2. **Scheduler shape** — in-process `@nestjs/schedule`, or idempotent methods behind an
-   admin/external trigger? Affects C1's dependency.
-3. **Stripe** — in scope? Determines whether Phase D is real or placeholder.
-4. **Email provider** — which, if any? Blocks Phase E.
-5. **New dependencies** — `@nestjs/schedule`, an email SDK, Playwright. All require approval
-   under the Library Selection Policy. `jsdom`/`@testing-library/react` were approved and are
-   already wired into Vitest.
+1. ~~**Overage pricing**~~ — **resolved: option 2.** Rates live on the plan per metric; a
+   metric without one is still a hard cap.
+2. ~~**Scheduler shape**~~ — **resolved: both.** `@nestjs/schedule` v6 calls the same
+   idempotent methods the admin endpoints call, and `BILLING_CYCLE_CRON=off` falls back to an
+   external trigger.
+3. **Stripe** — still out of scope. The seams are modelled as reference columns; payment
+   methods manage placeholder records.
+4. ~~**Email provider**~~ — **resolved: SMTP via Nodemailer**, so any provider works and none
+   is required to boot.
+5. ~~**New dependencies**~~ — `@nestjs/schedule`, `nodemailer` and `@playwright/test` were all
+   approved and installed.
 
 ---
 
@@ -269,6 +286,20 @@ Three things worth recording about how they went in:
 
 Stripe remains out of scope; `stripeToken` and `stripeInvoiceId` are reference columns.
 Payment methods manage placeholder records until a processor is integrated.
+
+## Verified live — overage billing
+
+Against a seeded Postgres and a running API, signed in as the seeded customer on Pro
+(500,000 API calls at `$0.0002`, seats hard-capped at 10):
+
+- `GET /usage/limits` reports the rate and a zero charge while inside the limit.
+- `POST /usage/track` pushing API calls to 600,000 is **accepted**, because the metric is
+  billable — 100,000 over at `$0.0002` = **`$20`**, and the meter reads 120 %.
+- `POST /usage/track` adding a seat past 10 is **refused 400**, because seats carry no rate:
+  _"This metric has no overage rate, so the limit is a hard cap."_
+- `GET /invoices/upcoming/estimate` returns `baseAmount 49`, `overageAmount 20`, `amount 69`.
+- `POST /admin/billing/cycle/subscriptions/:id/issue-invoice` issues **`$69`**, and issuing it
+  three times returns the same invoice each time.
 
 ## Verified live
 

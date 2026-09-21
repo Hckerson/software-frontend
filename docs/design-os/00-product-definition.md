@@ -64,12 +64,18 @@ along this seam.
 
 ## Business rules
 
-- A user has **at most one non-canceled subscription** — enforced by
-  `@@unique([userId, status])` on `Subscription`.
+- A user has **at most one active subscription** — enforced by a partial unique index on
+  `Subscription(userId) WHERE status = 'ACTIVE'`. The composite `@@unique([userId, status])`
+  it replaced allowed only one row per status ever, which made billing history impossible;
+  see [F2](05-billing-cycle-plan.md#f2--uniqueuserid-status-makes-billing-history-impossible).
 - An invoice is unique per `(subscriptionId, billingPeriodStart)` — one invoice per period.
 - A usage log is unique per `(subscriptionId, metricType, period)` — usage accumulates into
   a single row per metric per period, never appends.
 - Metered dimensions are exactly `API_CALLS`, `STORAGE_GB`, `SEATS`.
+- A metric's limit is **billable or a hard cap, never both**: if the plan lists a per-unit
+  price for it in `overageRates`, usage may exceed the limit and the excess is billed; if it
+  does not, the request is refused at the limit. A metric absent from `limits` is unlimited
+  and is never billed for overage.
 - Plan tiers are exactly `FREE`, `PRO`, `ENTERPRISE`.
 - Deactivating a plan must not cascade to subscriptions; `Subscription.plan` has no
   `onDelete: Cascade` and that is deliberate.
