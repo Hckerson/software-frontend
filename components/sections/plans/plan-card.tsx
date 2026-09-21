@@ -55,7 +55,11 @@ export default function PlanCard({
                 </p>
             )}
 
-            <PlanFeatureList limits={plan.limits} features={plan.features} />
+            <PlanFeatureList
+                limits={plan.limits}
+                overageRates={plan.overageRates}
+                features={plan.features}
+            />
 
             <Button
                 className="mt-auto"

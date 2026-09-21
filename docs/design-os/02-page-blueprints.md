@@ -31,7 +31,7 @@ carrying the one action that resolves it) · **error** (the `ApiError` message p
 **success**. A blueprint that omits its empty state is incomplete, not concise.
 
 **Permissions.** Enforced **server-side before render** by
-[`middleware.ts`](../../middleware.ts), and independently again by the backend's `JwtAuthGuard`
+[`proxy.ts`](../../proxy.ts), and independently again by the backend's `JwtAuthGuard`
 and `RolesGuard`. No route gates itself on the client. Unauthenticated visitors are sent to
 `/auth/login?next=<path>`; non-admins never reach `/admin/*`; signed-in visitors are bounced
 out of `/auth/*`.
@@ -163,19 +163,25 @@ ever enters this app.
 
 ## Admin
 
-Reachable only after middleware has verified an `ADMIN` claim. **No admin route checks a role
+Reachable only after the proxy has verified an `ADMIN` claim. **No admin route checks a role
 itself.**
 
-| Route                  | Modules                                           | Data                                                                      |
-| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------- |
-| `/admin`               | `admin-overview` · `admin-overdue-invoices`       | `GET /admin/stats`, `GET /admin/billing/stats`                            |
-| `/admin/plans`         | `admin-plan-list` · `admin-plan-form`             | `GET /billing/plans` + create · activate · deactivate · delete            |
-| `/admin/subscriptions` | `admin-subscription-list`                         | `GET /admin/billing/subscriptions[/status/:status]`                       |
-| `/admin/invoices`      | `admin-invoice-health` · `admin-overdue-invoices` | `GET /admin/billing/overdue-invoices`, `GET /admin/billing/invoice-stats` |
+| Route                  | Modules                                                              | Data                                                                          |
+| ---------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `/admin`               | `admin-overview` · `admin-cycle-controls` · `admin-overdue-invoices` | `GET /admin/stats`, `GET /admin/billing/stats`, `POST .../cycle/*`            |
+| `/admin/plans`         | `admin-plan-list` · `admin-plan-edit` · `admin-plan-form`            | `GET /billing/plans` + create · edit · activate · deactivate · delete         |
+| `/admin/subscriptions` | `admin-subscription-list` · `issue-invoice-button`                   | `GET /admin/billing/subscriptions[/status/:status]`, `POST .../issue-invoice` |
+| `/admin/invoices`      | `admin-invoice-health` · `admin-overdue-invoices`                    | `GET /admin/billing/overdue-invoices`, `GET /admin/billing/invoice-stats`     |
+
+**The console is no longer read-only.** `/admin` carries the billing cycle, and
+`/admin/subscriptions` can issue a single period's invoice. Both are **write actions behind a
+confirm step**, and both are idempotent server-side, so a double click cannot double-bill.
 
 **Catalogue rules, business before UI:** **deactivating a plan must not cascade** to the
 subscriptions referencing it, and **deletion double-confirms** — a plan with history should be
-deactivated instead.
+deactivated instead. **Editing does not cascade either**: a price or limit change applies to a
+subscription when it renews, never retroactively, which is why editing needs no confirm step
+while its two neighbours do.
 **Note:** `admin-overdue-invoices` is composed on both `/admin` and `/admin/invoices`, so the
 two screens cannot show different queues.
 

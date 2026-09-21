@@ -27,9 +27,9 @@ export default defineConfig({
                 plugins: [react()],
                 resolve,
                 test: {
-                    name: "components",
+                    name: "react",
                     environment: "jsdom",
-                    include: ["components/**/*.test.tsx"],
+                    include: ["components/**/*.test.tsx", "lib/**/*.test.tsx"],
                     setupFiles: ["./tools/testing/setup-components.ts"],
                 },
             },

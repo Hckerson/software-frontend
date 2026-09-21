@@ -174,6 +174,13 @@ restores focus to the trigger.** **Styling:** `.dialog*`, `--z-modal`.
 **Guards:** cancel, reactivate, plan change, plan deactivate, plan delete, payment-method
 removal.
 
+> **Focus restore was claimed before it was true.** The dialog moved focus in but never back,
+> and because `onCancel` sat in the effect's dependencies, a parent re-render with an inline
+> handler — `isPending` flipping mid-delete — pulled focus back to _Confirm_ even after the user
+> had tabbed to _Cancel_. Both are fixed in
+> [`use-modal-focus.ts`](../../lib/hooks/use-modal-focus.ts), which `admin-plan-edit` shares, and
+> both are asserted in [`confirm-dialog.test.tsx`](../../components/common/confirm-dialog.test.tsx).
+
 ### `Money`
 
 **Purpose:** every amount in the product. Design principle 2.
@@ -208,7 +215,7 @@ announced, not merely coloured.**
 **Purpose:** the authenticated frame — sidebar, topbar, content. **Props:** none; reads
 `GET /users/me` for `role`.
 **Critical:** `role` decides **only whether the admin nav group renders. It never authorises.**
-Authorisation is [`middleware.ts`](../../middleware.ts) plus the backend's `RolesGuard`. Hiding
+Authorisation is [`proxy.ts`](../../proxy.ts) plus the backend's `RolesGuard`. Hiding
 a link is navigation, not security.
 **Styling:** `.app-shell` — and its responsive collapse is named there, not inlined.
 

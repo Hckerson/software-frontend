@@ -11,28 +11,79 @@ References [Phases 7–8](03-frontend-architecture.md).
 | 3     | Product definition settled; IA, blueprints, architecture recorded                                        |
 | 4     | App shell, auth, route protection, hooks for every endpoint group                                        |
 | 5     | Customer surfaces (dashboard, plans, subscription, usage, invoices, settings) and admin surfaces         |
-| 6     | Auth moved to an httpOnly cookie; `middleware.ts` enforces routes and admin access server-side           |
-| 7     | RS256 keypair signing; middleware verifies signatures with WebCrypto, no shared secret                   |
+| 6     | Auth moved to an httpOnly cookie; `proxy.ts` enforces routes and admin access server-side                |
+| 7     | RS256 keypair signing; the proxy verifies signatures with WebCrypto, no shared secret                    |
 | 8     | Response schemas on all 49 backend operations; frontend types generated end to end; Vitest renders React |
+
+## Closed in this pass
+
+The three dependency-gated gaps were approved and are now implemented.
+
+1. **The cycle runs unattended, and an operator can run it by hand.** `@nestjs/schedule` v6
+   (the CJS major matching Nest 11 — v12 is ESM-only and breaks the Jest harness) calls
+   `CycleService.runAll()` daily at 02:00 from
+   [`cycle.scheduler.ts`](../../../backend/src/modules/core/cycle/cycle.scheduler.ts). The
+   frontend also gained the operator surface it never had: `admin-cycle-controls` on `/admin`
+   and a per-row **Issue invoice** action on `/admin/subscriptions`. Before this, the endpoints
+   built in Phase B4 to "exercise the path before the scheduler exists" were reachable only by
+   `curl`.
+2. **Password reset emails are delivered.** `SmtpResetDelivery` (Nodemailer) sits behind the
+   same `RESET_DELIVERY` token, chosen by a factory that falls back to `LoggingResetDelivery`
+   when `SMTP_HOST` is unset — so the app still boots unconfigured. A delivery failure is
+   caught and logged rather than propagated, because a 500 on send would make "this email
+   exists" observable and undo E4.
+3. **E2E tests exist.** Playwright drives Chromium against `next dev`, minting a real RS256
+   session with a keypair generated per run, so [`proxy.ts`](../../proxy.ts)'s signature
+   verification is exercised rather than stubbed. The API is stubbed at the network layer, so
+   the suite needs no database. The backend gained its own suite too: 19 integration tests
+   against a real Postgres.
+4. **Overage is billed.** `SubscriptionPlan.overageRates` prices each metric per unit.
+   **A metric with a rate may exceed its limit and is billed for the excess; a metric without
+   one stays a hard cap**, so option 2 is a superset of option 1 rather than a replacement and
+   every existing plan is unchanged. `OverageCalculatorService` is the only place overage
+   becomes money, shared by the cycle and the upcoming-invoice estimate so a customer's
+   preview and their bill cannot disagree. Verified live: 100,000 API calls over at `$0.0002`
+   bills `$20` on top of a `$49` plan, while a seat past the cap is still refused.
 
 ## Known gaps, ranked
 
-1. **The cycle jobs run only on an admin trigger.** `POST /admin/billing/cycle/run` does the
-   work; nothing calls it unattended. Needs `@nestjs/schedule` (approval-gated). The jobs are
-   deliberately plain idempotent methods so the cron layer is a thin caller.
-2. **Password reset emails are not delivered.** Issuance, single-use enforcement and
-   verification all work; `LoggingResetDelivery` writes the link to the log. Swapping in a
-   provider is one class behind the `RESET_DELIVERY` token — needs an email dependency.
-3. **No E2E tests.** Vitest now runs two projects — `node` for tooling, logic and auth
-   verification, and `components` in jsdom for React — so the `common/` components carrying a
-   design principle are covered. No browser has driven the UI end to end; that needs Playwright,
-   which is proposed rather than installed.
-4. **Overage is not billed.** Implemented as option 1 — exceeding a limit blocks the request.
-   The overage call site exists and is passed a zero rate; billing for overage means adding
-   `overageRates` to `SubscriptionPlan`.
-5. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
+1. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
    `stripeInvoiceId` are reference columns.
-6. **Charts deferred.** Usage history renders as a table.
+2. **No admin user management.** `usersFindAll`, `usersFindOne` and `usersRemove` are generated
+   into the contract but consumed nowhere, because no admin users screen is blueprinted. Per
+   the Phase 2 rule, that screen needs an [experience map](01-information-architecture.md)
+   before it gets a route — recorded here so the unused routes read as a decision.
+3. **The scheduler is in-process.** `@nestjs/schedule` runs in every instance, so a multi-instance
+   deployment must set `BILLING_CYCLE_CRON=off` on all but one. No advisory lock was added: the
+   jobs are idempotent by construction, and a Prisma connection pool cannot hold a session-level
+   advisory lock across two queries, so a lock would have promised more than it delivered.
+4. **Charts deferred.** Usage history renders as a table.
+
+## Found by the new tests
+
+Writing the Playwright and cycle suites surfaced four things that lint, types and Vitest all
+passed over — which is the argument for E2E stated as evidence rather than as a claim.
+
+- **The app rendered nothing under `127.0.0.1`.** Next 16 blocks cross-origin dev resources, so
+  the HMR socket and chunks were refused and React never hydrated. Every route still _redirected_
+  correctly, so the auth tests passed against a blank page. Only an assertion about visible
+  content caught it. The suite now uses `localhost`.
+- **A malformed cycle response crashes the section, and the error boundary catches it.**
+  `CycleRunReport` reads `summary.examined` with the shape the contract guarantees; when a stub
+  returned the wrong shape, the boundary showed "Something went wrong" rather than a blank
+  screen. Working as designed, and now observed rather than assumed.
+- **`test/jest-e2e.json` could never load application code** — the same defect already recorded
+  below for the unit harness, fixed there and left in place here. No `moduleNameMapper` for the
+  tsconfig aliases or the generated client's ESM-style `.js` specifiers, so the first
+  integration test failed on `Cannot find module './internal/class.js'`. That is why `test/`
+  held nothing but the generated `app.e2e-spec.ts`.
+- **The Prisma driver adapter needs `--experimental-vm-modules`.** It loads over a dynamic
+  import that Jest's CJS VM refuses outright. `test:e2e` now invokes Jest through `node` with
+  the flag rather than leaving the next person to discover it.
+
+The cycle suite found **no defect in the cycle itself** — it was already correct. To check the
+tests were not vacuous, disabling the idempotency guard in `issueInvoiceForPeriod` was confirmed
+to fail the three-issues-one-invoice test, and the guard restored.
 
 ## Found by actually running it
 
@@ -105,9 +156,22 @@ clamped to the track maximum while the visible text still states the true percen
 tables collapse via named classes in `components.css`, so breakpoint behaviour is auditable in
 one file.
 
-**Verification gates** — `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build` all green.
+**Verification gates** — green on **both** sides, which was not previously true: the backend's
+`pnpm lint` exited 1 while this checklist claimed otherwise.
+
+| Gate         | Frontend                    | Backend           |
+| ------------ | --------------------------- | ----------------- |
+| `lint`       | 0 (incl. 7 custom rules)    | 0                 |
+| `type-check` | 0                           | 0                 |
+| `test`       | 181, two Vitest projects    | 48, Jest          |
+| `test:e2e`   | 11, Playwright, no database | 19, real Postgres |
+| `build`      | 17 routes                   | clean             |
+
 `pnpm test` runs both Vitest projects: `node` for tooling, logic and auth verification, and
-`components` in jsdom for React.
+`react` in jsdom for components and hooks. The frontend's `test:e2e` stubs the API and needs no
+database; the backend's needs one, created by `pnpm test:e2e:setup` as a **separate
+`meter_test`** — the cycle suite truncates every table between tests, so it must never point at
+the development database.
 
 ## Deviation from the master prompt
 

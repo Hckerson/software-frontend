@@ -105,6 +105,7 @@ export const subscriptionPlanDtoSchema = z.object({
     planType: z.enum(["FREE", "PRO", "ENTERPRISE"]),
     features: z.record(z.string(), z.unknown()),
     limits: z.record(z.string(), z.unknown()),
+    overageRates: z.record(z.string(), z.unknown()),
     isActive: z.boolean(),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -118,6 +119,7 @@ export const createPlanDtoSchema = z.object({
     priceUSD: z.number(),
     features: z.record(z.string(), z.unknown()),
     limits: z.record(z.string(), z.unknown()),
+    overageRates: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreatePlanDto = z.infer<typeof createPlanDtoSchema>;
 
@@ -128,6 +130,7 @@ export const updatePlanDtoSchema = z.object({
     priceUSD: z.number().optional(),
     features: z.record(z.string(), z.unknown()).optional(),
     limits: z.record(z.string(), z.unknown()).optional(),
+    overageRates: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdatePlanDto = z.infer<typeof updatePlanDtoSchema>;
 
@@ -169,6 +172,8 @@ export type InvoiceDto = z.infer<typeof invoiceDtoSchema>;
 export const upcomingInvoiceDtoSchema = z.object({
     subscriptionId: z.string(),
     amount: z.number(),
+    baseAmount: z.number(),
+    overageAmount: z.number(),
     dueDate: z.string(),
     billingPeriodStart: z.string(),
     billingPeriodEnd: z.string(),
@@ -207,6 +212,9 @@ export const limitCheckDtoSchema = z.object({
     remainingQuota: z.number().nullable(),
     percentageUsed: z.number(),
     isAllowed: z.boolean(),
+    overageRate: z.number().nullable(),
+    overageUnits: z.number(),
+    overageCharge: z.number(),
 });
 export type LimitCheckDto = z.infer<typeof limitCheckDtoSchema>;
 

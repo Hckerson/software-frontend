@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import ConfirmDialog from "@/components/common/confirm-dialog";
 
 const props = {
@@ -9,6 +9,10 @@ const props = {
 };
 
 describe("ConfirmDialog", () => {
+    afterEach(() => {
+        document.body.innerHTML = "";
+    });
+
     it("renders nothing while closed, so destructive actions need a second step", () => {
         const { container } = render(
             <ConfirmDialog
@@ -51,6 +55,58 @@ describe("ConfirmDialog", () => {
         expect(document.activeElement).toBe(
             screen.getByRole("button", { name: props.confirmLabel }),
         );
+    });
+
+    it("restores focus to the trigger when it closes", () => {
+        const trigger = document.createElement("button");
+        document.body.appendChild(trigger);
+        trigger.focus();
+
+        const { rerender } = render(
+            <ConfirmDialog
+                {...props}
+                open
+                onConfirm={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(document.activeElement).not.toBe(trigger);
+
+        rerender(
+            <ConfirmDialog
+                {...props}
+                open={false}
+                onConfirm={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(document.activeElement).toBe(trigger);
+    });
+
+    it("keeps focus where the user put it when the parent re-renders", () => {
+        const { rerender } = render(
+            <ConfirmDialog
+                {...props}
+                open
+                onConfirm={vi.fn()}
+                onCancel={() => undefined}
+            />,
+        );
+        const cancel = screen.getByRole("button", { name: "Cancel" });
+        cancel.focus();
+
+        rerender(
+            <ConfirmDialog
+                {...props}
+                open
+                onConfirm={vi.fn()}
+                onCancel={() => undefined}
+            />,
+        );
+
+        expect(document.activeElement).toBe(cancel);
     });
 
     it("closes on Escape", () => {

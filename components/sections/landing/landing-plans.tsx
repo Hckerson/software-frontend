@@ -37,6 +37,7 @@ export default function LandingPlans() {
                         </p>
                         <PlanFeatureList
                             limits={plan.limits}
+                            overageRates={plan.overageRates}
                             features={plan.features}
                         />
                         <LinkButton

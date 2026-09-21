@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef } from "react";
 import Button from "@/components/common/button";
+import { useModalFocus } from "@/lib/hooks/use-modal-focus";
 
 interface Props {
     open: boolean;
@@ -21,21 +21,7 @@ export default function ConfirmDialog({
     onConfirm,
     onCancel,
 }: Props) {
-    const confirmRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-        if (!open) return;
-
-        confirmRef.current?.focus();
-
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onCancel();
-        };
-
-        window.addEventListener("keydown", onKeyDown);
-
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [open, onCancel]);
+    const confirmRef = useModalFocus<HTMLButtonElement>(open, onCancel);
 
     if (!open) return null;
 

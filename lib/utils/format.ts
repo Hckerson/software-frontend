@@ -12,6 +12,13 @@ const moneyFormatter = new Intl.NumberFormat("en-US", {
 
 const countFormatter = new Intl.NumberFormat("en-US");
 
+const rateFormatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: DEFAULT_CURRENCY,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+});
+
 export const formatMoney = (
     amount: string | number | null | undefined,
 ): string => {
@@ -24,6 +31,11 @@ export const formatMoney = (
 
     return Number.isFinite(value) ? moneyFormatter.format(value) : EMPTY_VALUE;
 };
+
+export const formatRate = (value: number | null | undefined): string =>
+    value === null || value === undefined || !Number.isFinite(value)
+        ? EMPTY_VALUE
+        : rateFormatter.format(value);
 
 export const formatCount = (value: number | null | undefined): string =>
     value === null || value === undefined || !Number.isFinite(value)

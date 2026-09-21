@@ -36,17 +36,17 @@ Changes made while closing out this phase:
 ### Folder structure
 
 ```
-middleware.ts            server-side route + admin gate
+proxy.ts                 server-side route + admin gate (Next 16 renamed `middleware`)
 app/
   layout.tsx  page.tsx  not-found.tsx  error.tsx
   auth/       layout.tsx + login | register | forgot-password | reset-password
   (app)/      layout.tsx + dashboard | plans | subscription | usage
               | invoices/[id] | settings | admin/*
 components/
-  common/     Button, PageHeader, SectionCard, StatCard, StatusPill,
-              UsageMeter, DataTable, EmptyState, ErrorState, Skeleton,
-              ConfirmDialog, Money, PeriodRange
-  layout/     Sidebar, SidebarNav, Topbar
+  common/     Button, LinkButton, PageHeader, SectionCard, StatCard, StatusPill,
+              UsageMeter, DataTable, DetailRow, EmptyState, ErrorState, Skeleton,
+              ConfirmDialog, Money, PeriodRange, FormField
+  layout/     AppShell, Sidebar, SidebarGroup, Topbar, ThemeToggle, AuthCard
   sections/   one folder per route; each file is a composable section
   ui/forms/   existing input primitives
   providers/  Provider (React Query)
@@ -111,7 +111,7 @@ type by hand.
 `Decimal` fields arrive over JSON as `string` and are typed as such, parsed at the formatting
 boundary, never with `Number()` scattered through components.
 
-The one shape still written by hand is `SessionClaims` — the JWT payload middleware verifies.
+The one shape still written by hand is `SessionClaims` — the JWT payload the proxy verifies.
 That is not an API response and has no DTO to generate from.
 
 ### Authentication boundary
@@ -136,13 +136,13 @@ system was on HS256.
 Generate a pair with `pnpm keys:generate` in the backend; it prints the three environment
 lines to paste. Both services fail fast if their key is missing.
 
-### What middleware enforces
+### What the proxy enforces
 
 [`lib/auth/verify-token.ts`](../../lib/auth/verify-token.ts) verifies the signature with
 WebCrypto (`RSASSA-PKCS1-v1_5` / SHA-256), which is available in the Edge runtime — so this
 needs **no dependency** on either side. Imported keys are cached per PEM.
 
-`middleware.ts` runs before render and:
+`proxy.ts` runs before render and:
 
 - rejects any token whose signature does not check out, whose `alg` is not `RS256` (closing
   the `alg: none` downgrade), or whose `exp` has passed;

@@ -1,11 +1,7 @@
 import axios from "axios";
 import { ApiError } from "@/lib/errors/api-error";
-import {
-    API_BASE_URL,
-    AUTH_PATH_PREFIX,
-    HTTP_STATUS,
-    LOGIN_PATH,
-} from "@/lib/constants";
+import { loginTarget } from "@/lib/utils/login-redirect";
+import { API_BASE_URL, AUTH_PATH_PREFIX, HTTP_STATUS } from "@/lib/constants";
 import type {
     AxiosError,
     AxiosInstance,
@@ -34,7 +30,10 @@ apiClient.interceptors.response.use(
             typeof window !== "undefined" &&
             !isOnAuthRoute()
         ) {
-            window.location.href = LOGIN_PATH;
+            window.location.href = loginTarget(
+                window.location.pathname,
+                window.location.search,
+            );
         }
 
         return Promise.reject(ApiError.from(error));

@@ -5,25 +5,12 @@ import FormField from "@/components/common/form-field";
 import SectionCard from "@/components/common/section-card";
 import ErrorState from "@/components/common/error-state";
 import SelectInput from "@/components/ui/forms/select-input";
-import { METRIC_DESCRIPTORS } from "@/lib/data/metrics";
+import PlanMetricFields from "@/components/sections/admin/plan-metric-fields";
 import { PLAN_TYPE_OPTIONS } from "@/lib/data/plan-options";
+import { toLimits, toOverageRates } from "@/lib/utils/plan-draft";
 import { useCreatePlan } from "@/lib/hooks/use-plans";
-import type { PlanLimits, PlanType } from "@/lib/types";
+import type { PlanType } from "@/lib/types";
 import type { FormEvent } from "react";
-
-const toLimits = (draft: Record<string, string>): PlanLimits => {
-    const limits: PlanLimits = {};
-
-    for (const descriptor of METRIC_DESCRIPTORS) {
-        const raw = Number.parseInt(draft[descriptor.metricType] ?? "", 10);
-
-        if (Number.isFinite(raw) && raw > 0) {
-            limits[descriptor.metricType] = raw;
-        }
-    }
-
-    return limits;
-};
 
 export default function AdminPlanForm() {
     const create = useCreatePlan();
@@ -32,6 +19,11 @@ export default function AdminPlanForm() {
     const [price, setPrice] = useState("");
     const [planType, setPlanType] = useState<string | undefined>("PRO");
     const [limits, setLimits] = useState<Record<string, string>>({});
+    const [rates, setRates] = useState<Record<string, string>>({});
+
+    const setEntry =
+        (update: typeof setLimits) => (metricType: string, value: string) =>
+            update((previous) => ({ ...previous, [metricType]: value }));
 
     const onSubmit = (event: FormEvent) => {
         event.preventDefault();
@@ -44,6 +36,7 @@ export default function AdminPlanForm() {
                 priceUSD: Number.parseFloat(price) || 0,
                 features: {},
                 limits: toLimits(limits),
+                overageRates: toOverageRates(rates),
             },
             {
                 onSuccess: () => {
@@ -51,6 +44,7 @@ export default function AdminPlanForm() {
                     setDescription("");
                     setPrice("");
                     setLimits({});
+                    setRates({});
                 },
             },
         );
@@ -59,7 +53,7 @@ export default function AdminPlanForm() {
     return (
         <SectionCard
             title="Create a plan"
-            description="Leave a limit blank to make that metric unlimited."
+            description="A blank limit means unlimited. A blank overage rate makes that limit a hard cap; set one to bill for the excess instead."
         >
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
                 <div className="form-grid">
@@ -97,22 +91,12 @@ export default function AdminPlanForm() {
                     required
                 />
 
-                <div className="form-grid">
-                    {METRIC_DESCRIPTORS.map((descriptor) => (
-                        <FormField
-                            key={descriptor.metricType}
-                            label={`${descriptor.label} limit`}
-                            type="number"
-                            value={limits[descriptor.metricType] ?? ""}
-                            onChange={(value) =>
-                                setLimits((previous) => ({
-                                    ...previous,
-                                    [descriptor.metricType]: value,
-                                }))
-                            }
-                        />
-                    ))}
-                </div>
+                <PlanMetricFields
+                    limits={limits}
+                    rates={rates}
+                    onLimitChange={setEntry(setLimits)}
+                    onRateChange={setEntry(setRates)}
+                />
 
                 {create.isError && <ErrorState error={create.error} />}
 

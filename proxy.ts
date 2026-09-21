@@ -32,7 +32,7 @@ const readSession = async (
     return verifySessionToken(token, publicKey);
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     const isProtected = startsWithAny(pathname, PROTECTED_PREFIXES);
 

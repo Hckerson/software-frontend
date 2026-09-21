@@ -10,8 +10,11 @@
         "format": "prettier --write .",
         "type-check": "tsc --noEmit",
         "test": "vitest run",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
         "codemod:extract-hooks": "jiti tools/codemods/run-extract-transport-to-hook.ts",
-        "contract": "jiti tools/contract/run-generate-contract.ts && prettier --write lib/contract",
+        "contract": "jiti tools/contract/run-generate-contract.ts",
+        "contract:check": "jiti tools/contract/run-generate-contract.ts --check",
         "lint": "eslint",
         "prepare": "husky"
     },
@@ -37,6 +40,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
+        "@playwright/test": "^1.63.0",
         "@tailwindcss/postcss": "^4",
         "@tanstack/react-query-devtools": "^5.101.2",
         "@testing-library/dom": "^10.4.1",

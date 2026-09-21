@@ -107,14 +107,21 @@ disabled, because a disabled control invites a support ticket.
 
 ## Permissions
 
-Route protection is client-side today: `session.isActive()` gates the `(app)` layout and
-`role` gates `/admin/*`. The JWT lives in `localStorage`, which the edge runtime cannot read,
-so `middleware.ts` cannot enforce this — see [Frontend Architecture](03-frontend-architecture.md#authentication-boundary)
-for the httpOnly-cookie migration this is deliberately staged behind.
+Route protection is **server-side, before render**. [`proxy.ts`](../../proxy.ts) reads the
+httpOnly session cookie, verifies its RS256 signature with WebCrypto, and redirects an
+unauthenticated visitor to `/auth/login?next=<path>`, a non-`ADMIN` session off `/admin/*`, and
+a signed-in visitor away from `/auth/*`. It fails closed: with no `AUTH_JWT_PUBLIC_KEY`, every
+protected route redirects to login. See
+[Frontend Architecture](03-frontend-architecture.md#what-the-proxy-enforces) for the full list.
 
-The backend is the real boundary: `JwtAuthGuard` + `RolesGuard` on every admin route. The
-frontend gate is a navigation convenience, not a security control, and is documented as such
-so nobody mistakes it for one.
+**No route, layout or section gates itself on the client, and nothing about the session is
+readable by script** — the cookie is `HttpOnly`, and `localStorage` holds only the theme
+preference. `AppShell` reads `role` from `GET /users/me` for one purpose: deciding whether the
+admin nav group renders. Hiding a link is navigation, not authorisation.
+
+The backend remains the authority: `JwtAuthGuard` + `RolesGuard` verify independently on every
+admin route. The proxy is a genuine first line rather than a cosmetic one, but it is a
+_routing_ layer — authorisation is checked twice more behind it.
 
 ## Labelling conventions
 

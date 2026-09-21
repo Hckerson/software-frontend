@@ -32,3 +32,4 @@ export type InvoiceStatus = InvoiceDto["status"];
 export type UsageMetricType = UsageLogDto["metricType"];
 
 export type PlanLimits = SubscriptionPlanDto["limits"];
+export type OverageRates = SubscriptionPlanDto["overageRates"];
