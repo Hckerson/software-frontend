@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Button from "@/components/common/button";
 import FormField from "@/components/common/form-field";
 import ErrorState from "@/components/common/error-state";
@@ -7,6 +7,7 @@ import SelectInput from "@/components/ui/forms/select-input";
 import PlanMetricFields from "@/components/sections/admin/plan-metric-fields";
 import { PLAN_TYPE_OPTIONS } from "@/lib/data/plan-options";
 import { toDraft, toLimits, toOverageRates } from "@/lib/utils/plan-draft";
+import { useModalFocus } from "@/lib/hooks/use-modal-focus";
 import { useUpdatePlan } from "@/lib/hooks/use-plans";
 import type { PlanType, SubscriptionPlan } from "@/lib/types";
 import type { FormEvent } from "react";
@@ -18,25 +19,13 @@ interface Props {
 
 export default function AdminPlanEdit({ plan, onClose }: Props) {
     const update = useUpdatePlan();
-    const panelRef = useRef<HTMLFormElement>(null);
+    const panelRef = useModalFocus<HTMLFormElement>(true, onClose);
     const [name, setName] = useState(plan.name);
     const [description, setDescription] = useState(plan.description ?? "");
     const [price, setPrice] = useState(plan.priceUSD);
     const [planType, setPlanType] = useState<string | undefined>(plan.planType);
     const [limits, setLimits] = useState(toDraft(plan.limits));
     const [rates, setRates] = useState(toDraft(plan.overageRates));
-
-    useEffect(() => {
-        panelRef.current?.focus();
-
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onClose();
-        };
-
-        window.addEventListener("keydown", onKeyDown);
-
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [onClose]);
 
     const setEntry =
         (apply: typeof setLimits) => (metricType: string, value: string) =>
