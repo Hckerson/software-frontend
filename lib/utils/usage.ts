@@ -2,6 +2,7 @@ import { USAGE_THRESHOLD } from "@/lib/constants";
 import type {
     MeterState,
     MetricUsage,
+    OverageRates,
     PlanLimits,
     UsageMetricType,
 } from "@/lib/types";
@@ -11,6 +12,15 @@ export const limitFor = (
     metricType: UsageMetricType,
 ): number | null => {
     const value = limits?.[metricType];
+
+    return typeof value === "number" && value > 0 ? value : null;
+};
+
+export const overageRateFor = (
+    rates: OverageRates | undefined,
+    metricType: UsageMetricType,
+): number | null => {
+    const value = rates?.[metricType];
 
     return typeof value === "number" && value > 0 ? value : null;
 };

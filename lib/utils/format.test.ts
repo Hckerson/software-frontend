@@ -4,6 +4,7 @@ import {
     formatDate,
     formatMoney,
     formatPeriod,
+    formatRate,
     titleCase,
 } from "@/lib/utils/format";
 import { EMPTY_VALUE } from "@/lib/constants";
@@ -26,6 +27,23 @@ describe("formatMoney", () => {
         expect(formatMoney(undefined)).toBe(EMPTY_VALUE);
         expect(formatMoney("")).toBe(EMPTY_VALUE);
         expect(formatMoney("not money")).toBe(EMPTY_VALUE);
+    });
+});
+
+describe("formatRate", () => {
+    it("keeps the precision a per-unit price needs", () => {
+        expect(formatRate(0.0002)).toBe("$0.0002");
+        expect(formatRate(0.5)).toBe("$0.50");
+    });
+
+    it("does not collapse a sub-cent rate to zero the way formatMoney would", () => {
+        expect(formatMoney(0.0002)).toBe("$0.00");
+        expect(formatRate(0.0002)).not.toBe("$0.00");
+    });
+
+    it("falls back for an absent rate", () => {
+        expect(formatRate(null)).toBe(EMPTY_VALUE);
+        expect(formatRate(undefined)).toBe(EMPTY_VALUE);
     });
 });
 

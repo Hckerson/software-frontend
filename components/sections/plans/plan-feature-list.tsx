@@ -1,11 +1,12 @@
 import { Check } from "lucide-react";
 import { METRIC_DESCRIPTORS } from "@/lib/data/metrics";
-import { formatCount, titleCase } from "@/lib/utils/format";
-import { limitFor } from "@/lib/utils/usage";
-import type { PlanLimits, UsageMetricType } from "@/lib/types";
+import { formatCount, formatRate, titleCase } from "@/lib/utils/format";
+import { limitFor, overageRateFor } from "@/lib/utils/usage";
+import type { OverageRates, PlanLimits, UsageMetricType } from "@/lib/types";
 
 interface Props {
     limits: PlanLimits;
+    overageRates: OverageRates;
     features: Record<string, unknown>;
 }
 
@@ -14,16 +15,26 @@ const describe = (value: unknown): string =>
 
 const describeLimit = (
     limits: PlanLimits,
+    overageRates: OverageRates,
     descriptor: { metricType: UsageMetricType; unit: string },
 ): string => {
     const limit = limitFor(limits, descriptor.metricType);
 
-    return limit === null
-        ? `Unlimited ${descriptor.unit}`
-        : `${formatCount(limit)} ${descriptor.unit}`;
+    if (limit === null) return `Unlimited ${descriptor.unit}`;
+
+    const rate = overageRateFor(overageRates, descriptor.metricType);
+    const included = `${formatCount(limit)} ${descriptor.unit}`;
+
+    return rate === null
+        ? included
+        : `${included}, then ${formatRate(rate)} each`;
 };
 
-export default function PlanFeatureList({ limits, features }: Props) {
+export default function PlanFeatureList({
+    limits,
+    overageRates,
+    features,
+}: Props) {
     const included = Object.entries(features).filter(([, value]) =>
         Boolean(value),
     );
@@ -39,7 +50,9 @@ export default function PlanFeatureList({ limits, features }: Props) {
                         className="text-text-muted size-3 shrink-0"
                         strokeWidth={1.5}
                     />
-                    <span>{describeLimit(limits, descriptor)}</span>
+                    <span>
+                        {describeLimit(limits, overageRates, descriptor)}
+                    </span>
                 </li>
             ))}
             {included.map(([name, value]) => (

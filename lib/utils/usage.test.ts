@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { limitFor, meterState, usageFor, usageRatio } from "@/lib/utils/usage";
+import {
+    limitFor,
+    meterState,
+    overageRateFor,
+    usageFor,
+    usageRatio,
+} from "@/lib/utils/usage";
 import type { MetricUsage } from "@/lib/types";
 
 const usage = (
@@ -69,5 +75,29 @@ describe("meterState", () => {
     it("reports exceeded at and beyond the limit", () => {
         expect(meterState(100)).toBe("exceeded");
         expect(meterState(250)).toBe("exceeded");
+    });
+});
+
+describe("overageRateFor", () => {
+    it("reads the rate for a billable metric", () => {
+        const rates = { API_CALLS: 0.0002, STORAGE_GB: 0.5 };
+
+        expect(overageRateFor(rates, "API_CALLS")).toBe(0.0002);
+        expect(overageRateFor(rates, "STORAGE_GB")).toBe(0.5);
+    });
+
+    it("treats a metric with no rate as a hard cap, matching the backend", () => {
+        expect(overageRateFor({ API_CALLS: 0.0002 }, "SEATS")).toBeNull();
+        expect(overageRateFor({}, "SEATS")).toBeNull();
+        expect(overageRateFor(undefined, "SEATS")).toBeNull();
+    });
+
+    it("treats a zero or negative rate as a hard cap", () => {
+        expect(overageRateFor({ SEATS: 0 }, "SEATS")).toBeNull();
+        expect(overageRateFor({ SEATS: -1 }, "SEATS")).toBeNull();
+    });
+
+    it("ignores a rate that is not a number", () => {
+        expect(overageRateFor({ SEATS: "0.5" }, "SEATS")).toBeNull();
     });
 });

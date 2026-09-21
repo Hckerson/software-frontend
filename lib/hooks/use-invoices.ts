@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { query } from "@/lib/api-client";
 import { routes } from "@/lib/contract/routes";
 import { queryKeys } from "@/lib/hooks/query-keys";
-import type { Invoice } from "@/lib/types";
+import type { Invoice, UpcomingInvoice } from "@/lib/types";
 
 export const useInvoices = () =>
     useQuery({
@@ -21,7 +21,7 @@ export const useUpcomingInvoice = (enabled = true) =>
     useQuery({
         queryKey: queryKeys.upcomingInvoice,
         queryFn: () =>
-            query.get<{ amount: string; dueDate: string } | null>(
+            query.get<UpcomingInvoice | null>(
                 routes.invoicesGetUpcomingInvoice(),
             ),
         enabled,
