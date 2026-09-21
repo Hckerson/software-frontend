@@ -192,17 +192,29 @@ Backend unit tests (48) cover the hard-cap-per-metric cases.
 
 ## Re-run
 
-The audit is a script, not a reading. Re-running it against the current tree reports:
+The audit is a check, not a reading: **`pnpm design:audit`**, in
+[`tools/design-audit/`](../tools/design-audit/). It exits non-zero on any finding.
+
+It takes its expectations **from the documents rather than from a list kept beside them** —
+the README's counts, the 01 sitemap, and every name 06 and 07 introduce through a heading, the
+first column of a table or a leading bold — and diffs them both ways against the filesystem. The
+first version of this audit compared against a hand-written list, which was stale within a day;
+that failure mode is what this design removes.
+
+It checks one state rule, the only one the contract states without exceptions: **a section that
+reads a query hook must render `ErrorState`.** Hooks are classified as query or mutation from
+their own definitions, so write-only sections such as `issue-invoice-button` are exempt by
+construction rather than by an exception list. The empty-state rule is not checked, because it
+has justified exceptions that only a reader can judge.
+
+Against the current tree it reports **one finding the original audit missed**:
 
 ```
-0 findings
-routes: 16 | sections: 38
-{admin:11, auth:4, dashboard:3, invoices:3, landing:2,
- plans:3, settings:5, subscription:4, usage:3}
+[states] landing-plans reads a query hook but never renders ErrorState
 ```
 
-Gates: `lint` 0 · `type-check` 0 · `test` 187 in 23 files · `build` 17 routes ·
-`test:e2e` 11 of 11 in Chromium.
+A failed `GET /billing/plans` makes the public plan preview silently disappear. The original
+audit never examined `landing-plans`, because the hand-written list did not name it.
 
 ## Follow-up pass
 
