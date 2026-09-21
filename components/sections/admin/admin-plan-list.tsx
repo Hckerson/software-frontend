@@ -10,6 +10,7 @@ import EmptyState from "@/components/common/empty-state";
 import ErrorState from "@/components/common/error-state";
 import StatusPill from "@/components/common/status-pill";
 import ConfirmDialog from "@/components/common/confirm-dialog";
+import AdminPlanEdit from "@/components/sections/admin/admin-plan-edit";
 import { titleCase } from "@/lib/utils/format";
 import {
     useDeletePlan,
@@ -23,6 +24,7 @@ export default function AdminPlanList() {
     const setActive = useSetPlanActive();
     const remove = useDeletePlan();
     const [pending, setPending] = useState<SubscriptionPlan | null>(null);
+    const [editing, setEditing] = useState<SubscriptionPlan | null>(null);
 
     const columns: Column<SubscriptionPlan>[] = [
         { key: "name", header: "Plan", render: (row) => row.name },
@@ -48,6 +50,13 @@ export default function AdminPlanList() {
             header: "Actions",
             render: (row) => (
                 <div className="flex items-center gap-2">
+                    <Button
+                        size="sm"
+                        tone="quiet"
+                        onClick={() => setEditing(row)}
+                    >
+                        Edit
+                    </Button>
                     <Button
                         size="sm"
                         tone="quiet"
@@ -115,6 +124,14 @@ export default function AdminPlanList() {
                 }
                 onCancel={() => setPending(null)}
             />
+
+            {editing && (
+                <AdminPlanEdit
+                    key={editing.id}
+                    plan={editing}
+                    onClose={() => setEditing(null)}
+                />
+            )}
         </SectionCard>
     );
 }

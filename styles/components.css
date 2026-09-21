@@ -386,6 +386,10 @@
     box-shadow: var(--shadows-xl);
 }
 
+.dialog-panel--wide {
+    max-width: 40rem;
+}
+
 /* ============================================
    LANDING — editorial register, public route only
    ============================================ */
