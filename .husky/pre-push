@@ -1,2 +1,5 @@
+set -e
+
 pnpm type-check
 pnpm lint
+pnpm contract:check
