@@ -183,8 +183,10 @@ flowing end to end through types, `lib/utils/usage.ts`, the catalogue, the landi
 **Resolved by the author during this pass**, not by this audit: 05 now records option 2 as
 taken, explains that a metric with a rate bills the excess while a metric without one stays a
 hard cap — making option 2 a superset rather than a replacement — and 00 and 04 agree. The
-frontend half is built; the backend half (passing the real rate to `calculateOverageCharge`,
-and `POST /usage/track` no longer rejecting a metric that carries one) is what remains.
+backend half is built too, in `4687754`: `OverageCalculatorService` passes the plan's real rate
+to `calculateOverageCharge` and is the single path both the cycle and the upcoming estimate
+use, and `POST /usage/track` admits usage past a limit only when that metric carries a rate.
+Backend unit tests (48) cover the hard-cap-per-metric cases.
 
 ---
 
@@ -199,9 +201,21 @@ routes: 16 | sections: 38
  plans:3, settings:5, subscription:4, usage:3}
 ```
 
-Gates: `lint` 0 · `type-check` 0 · `test` 185 in 23 files · `build` 17 routes.
+Gates: `lint` 0 · `type-check` 0 · `test` 187 in 23 files · `build` 17 routes ·
+`test:e2e` 11 of 11 in Chromium.
 
-**What the audit cannot see**, and what the next pass should cover: the backend overage wiring
-above; `test:e2e`, which needs a running stack and was not exercised here; and whether
-`ConfirmDialog` actually restores focus to its trigger, which
-[07](design-os/07-component-library.md) claims and which no test asserts.
+## Follow-up pass
+
+Three items the audit could not see from source alone were then checked directly:
+
+- **Backend overage — already delivered.** The audit had inferred it was pending from the
+  documents; the backend's own history (`4687754`) showed otherwise. Corrected in §6.
+- **`ConfirmDialog` focus restore — claimed, not true, now fixed.** [07](design-os/07-component-library.md)
+  said the dialog restores focus to its trigger. It did not, and a failing test proved it before
+  the fix. Writing that test surfaced a second defect: `onCancel` in the effect's dependencies
+  meant any parent re-render with an inline handler dragged focus back to _Confirm_. Both are
+  fixed in a shared `useModalFocus` hook, which `admin-plan-edit` — carrying the same two
+  defects — now uses too. Two tests added.
+- **`test:e2e` — frontend 11 of 11.** It needs no stack: Playwright boots `next dev` with a
+  per-run keypair and stubs the API. The **backend** e2e suite needs Postgres, which was not
+  running, and was not exercised; no backend code changed in this pass.
