@@ -18,6 +18,7 @@ export const queryKeys = {
         ["usage", "limit", metric] as const,
     admin: ["admin"] as const,
     adminStats: ["admin", "stats"] as const,
+    adminUsers: ["admin", "users"] as const,
     billingStats: ["admin", "billing", "stats"] as const,
     invoiceStats: ["admin", "billing", "invoice-stats"] as const,
     overdueInvoices: ["admin", "billing", "overdue"] as const,

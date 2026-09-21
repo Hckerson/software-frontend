@@ -1,5 +1,9 @@
 import { titleCase } from "@/lib/utils/format";
-import type { InvoiceStatus, SubscriptionStatus } from "@/lib/types";
+import type {
+    InvoiceStatus,
+    SubscriptionStatus,
+    UserAccountStatus,
+} from "@/lib/types";
 
 export interface StatusOption {
     label: string;
@@ -21,6 +25,12 @@ const SUBSCRIPTION_STATUSES: SubscriptionStatus[] = [
     "CANCELED",
 ];
 
+const ACCOUNT_STATUSES: UserAccountStatus[] = [
+    "ACTIVE",
+    "PENDING",
+    "SUSPENDED",
+];
+
 const toOption = (value: string): StatusOption => ({
     label: titleCase(value),
     value,
@@ -31,3 +41,6 @@ export const INVOICE_STATUS_OPTIONS: StatusOption[] =
 
 export const SUBSCRIPTION_STATUS_OPTIONS: StatusOption[] =
     SUBSCRIPTION_STATUSES.map(toOption);
+
+export const ACCOUNT_STATUS_OPTIONS: StatusOption[] =
+    ACCOUNT_STATUSES.map(toOption);

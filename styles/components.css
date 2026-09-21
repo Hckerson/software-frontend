@@ -192,6 +192,171 @@
     gap: var(--spacing-3);
 }
 
+/* A search-and-filter row above a list. The search takes the room; the
+   filter keeps its width; both wrap to their own lines on a phone. */
+.list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    border-bottom: 1px solid var(--colors-border-light);
+}
+
+.list-toolbar > :first-child {
+    flex: 1 1 16rem;
+}
+
+.list-toolbar > :last-child {
+    flex: 0 0 11rem;
+}
+
+@media (max-width: 720px) {
+    .list-toolbar > :last-child {
+        flex: 1 1 100%;
+    }
+}
+
+/* ============================================
+   USAGE TREND — small multiples, one per metric
+   Each metric keeps its own y-axis: calls and seats differ by five orders of
+   magnitude, and a shared or dual axis would invent a relationship.
+   ============================================ */
+
+.trend-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-4);
+}
+
+.trend-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    margin: 0;
+    transition: opacity 150ms ease;
+}
+
+.trend-chart.is-refreshing {
+    opacity: 0.55;
+}
+
+.trend-plot {
+    position: relative;
+}
+
+.trend-plot svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.trend-grid-line {
+    stroke: var(--colors-border-light);
+    stroke-width: 1;
+}
+
+.trend-baseline {
+    stroke: var(--colors-border);
+    stroke-width: 1;
+}
+
+.trend-bar {
+    fill: var(--colors-chart-series);
+    transition: opacity 120ms ease;
+}
+
+.trend-bar.is-active {
+    opacity: 0.78;
+}
+
+.trend-limit {
+    stroke: var(--colors-text-muted);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+}
+
+.trend-axis,
+.trend-value {
+    font-family: var(--fonts-body);
+    font-size: var(--font-sizes-caption);
+    font-variant-numeric: tabular-nums;
+}
+
+.trend-axis {
+    fill: var(--colors-text-muted);
+}
+
+.trend-value {
+    fill: var(--colors-text-secondary);
+    font-weight: var(--font-weights-semibold);
+}
+
+.trend-hit {
+    fill: transparent;
+    cursor: default;
+    outline: none;
+}
+
+.trend-hit:focus-visible {
+    stroke: var(--colors-accent);
+    stroke-width: 2;
+}
+
+.trend-tooltip {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--spacing-1) var(--spacing-2);
+    white-space: nowrap;
+    pointer-events: none;
+    background-color: var(--colors-background);
+    border: 1px solid var(--colors-border);
+    border-radius: var(--radii-sm);
+    box-shadow: var(--shadows-md);
+    transform: translate(-50%, calc(-100% - 8px));
+}
+
+/* The chart's table-view twin: every plotted value stays reachable without
+   hovering, for screen readers and for anyone who wants the exact numbers. */
+.table-view {
+    border-top: 1px solid var(--colors-border-light);
+}
+
+.table-view > summary {
+    cursor: pointer;
+    padding: var(--spacing-3);
+    font-size: var(--font-sizes-xs);
+    color: var(--colors-text-secondary);
+}
+
+.table-view > summary:focus-visible {
+    outline: 2px solid var(--colors-accent);
+    outline-offset: -2px;
+}
+
+@media (max-width: 1100px) {
+    .trend-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .trend-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trend-chart,
+    .trend-bar {
+        transition: none;
+    }
+}
+
 /* ============================================
    USAGE METER
    ============================================ */

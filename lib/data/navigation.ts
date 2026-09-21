@@ -2,11 +2,12 @@ import {
     CreditCard,
     FileText,
     Gauge,
-    LayoutDashboard,
     Layers,
+    LayoutDashboard,
     ReceiptText,
     Settings,
     ShieldCheck,
+    UserCog,
     Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -49,6 +50,7 @@ export const NAV_GROUPS: NavGroup[] = [
         items: [
             { href: "/admin", label: "Overview", icon: ShieldCheck },
             { href: "/admin/plans", label: "Plan catalogue", icon: Layers },
+            { href: "/admin/users", label: "Customers", icon: UserCog },
             {
                 href: "/admin/subscriptions",
                 label: "Subscriptions",
