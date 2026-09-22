@@ -207,8 +207,8 @@ one file.
 | ------------ | ------------------------------------ | ----------------- |
 | `lint`       | 0 (incl. 7 custom rules)             | 0                 |
 | `type-check` | 0                                    | 0                 |
-| `test`       | 234 in 29 files, two Vitest projects | 65, Jest          |
-| `test:e2e`   | 19, Playwright, no database          | 19, real Postgres |
+| `test`       | 253 in 31 files, two Vitest projects | 65, Jest          |
+| `test:e2e`   | 23, Playwright, no database          | 19, real Postgres |
 | `build`      | 17 routes, 18 with `_not-found`      | clean             |
 
 `pnpm test` runs both Vitest projects: `node` for tooling, logic and auth verification, and
