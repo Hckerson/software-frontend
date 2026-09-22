@@ -1,24 +1,29 @@
 "use client";
 import Money from "@/components/common/money";
 import Skeleton from "@/components/common/skeleton";
+import ErrorState from "@/components/common/error-state";
 import LinkButton from "@/components/common/link-button";
 import PlanFeatureList from "@/components/sections/plans/plan-feature-list";
 import { titleCase } from "@/lib/utils/format";
 import { usePlans } from "@/lib/hooks/use-plans";
 
 export default function LandingPlans() {
-    const { data, isPending } = usePlans();
+    const { data, isPending, isError, error, refetch } = usePlans();
     const plans = (data ?? []).filter((plan) => plan.isActive);
 
     if (isPending) return <Skeleton lines={4} />;
 
-    if (plans.length === 0) return null;
+    if (!isError && plans.length === 0) return null;
 
     return (
         <section className="landing-section flex flex-col gap-4">
             <h2 className="text-text font-display text-h3 text-center">
                 Simple, metered pricing
             </h2>
+
+            {isError && (
+                <ErrorState error={error} onRetry={() => void refetch()} />
+            )}
 
             <div className="plan-grid">
                 {plans.map((plan) => (
