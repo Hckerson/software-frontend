@@ -37,7 +37,7 @@ export default function AccountStatusButton({ user, isSelf }: Props) {
         <>
             <Button
                 size="sm"
-                tone={change.isError || !suspended ? "danger" : "quiet"}
+                tone={change.isError ? "danger" : "quiet"}
                 isLoading={change.isPending}
                 title={change.isError ? reason : undefined}
                 onClick={() => setConfirming(true)}

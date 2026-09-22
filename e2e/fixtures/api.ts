@@ -56,7 +56,7 @@ const CORS = {
 const preflight = (route: Route) =>
     route.fulfill({ status: 204, headers: CORS, body: "" });
 
-const json = (route: Route, data: unknown, status = 200) =>
+export const json = (route: Route, data: unknown, status = 200) =>
     route.request().method() === "OPTIONS"
         ? preflight(route)
         : route.fulfill({
