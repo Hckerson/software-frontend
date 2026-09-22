@@ -84,9 +84,9 @@ landing on `/auth/login` is a navigation bug, not a sign-out affordance.
 **Failure must never clear typed values.**
 **Success:** the backend sets the httpOnly session cookie and the route redirects to `next` or
 `/dashboard`. **The client stores nothing.**
-**Dependency:** password reset is
-[not yet delivered end to end](05-billing-cycle-plan.md) — the surfaces exist ahead of the
-mail path.
+**Dependency:** password reset is delivered end to end — the backend emails the link through
+`SmtpResetDelivery` when `SMTP_HOST` is set, and logs it otherwise, so an unconfigured
+environment still boots. See [Phase E](05-billing-cycle-plan.md#phase-e--password-reset).
 
 ---
 
