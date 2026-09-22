@@ -45,19 +45,63 @@ The three dependency-gated gaps were approved and are now implemented.
    preview and their bill cannot disagree. Verified live: 100,000 API calls over at `$0.0002`
    bills `$20` on top of a `$49` plan, while a seat past the cap is still refused.
 
+## Closed in the deferred pass
+
+5. **Admin user management.** `/admin/users` lists every account with its plan joined in,
+   searchable by name or email and filterable by status, and suspends or restores access
+   behind a confirmation. It was blueprinted first, as
+   [E7](01-information-architecture.md#e7--look-up-and-act-on-a-customer-internal-ops-support).
+   `usersRemove` stays deliberately unconsumed: it cascades to subscriptions and invoices.
+6. **The cycle can be triggered externally.** `POST /admin/billing/cycle/run` accepts an
+   `X-Cycle-Token` header matching `CYCLE_TRIGGER_TOKEN`, so a platform scheduler can run it
+   without an admin session — and a multi-instance deployment sets `BILLING_CYCLE_CRON=off`
+   everywhere and calls this instead, which is the better end state than electing one instance.
+   **Least privilege:** the token opens `run` only, never `renew`, `sweep-overdue` or
+   `issue-invoice`. Compared in constant time over SHA-256 digests; fails closed when unset or
+   shorter than 32 characters; a request that offers a wrong token is refused outright rather
+   than falling back to a session.
+7. **Usage history is charted.** Small multiples in inline SVG, one per metric on its own scale,
+   against the plan limit, with the table kept as a disclosure. No charting library: three
+   single-series charts did not justify the dependency.
+
+## Found in the deferred pass
+
+- **Suspension did nothing.** `UserAccountStatus.SUSPENDED` existed, the admin overview counted
+  suspended accounts, and neither sign-in nor token validation read the status — a suspended
+  customer could sign in and use every endpoint. It is now enforced in both places: sign-in
+  refuses with 403, and `JwtStrategy.validate` refuses an existing token on its next request,
+  so a suspension takes effect immediately rather than when a seven-day token expires. The
+  status is checked **after** the password, so an anonymous caller learns nothing — a wrong
+  password on a suspended account still says "Invalid credentials". Wiring a Suspend button
+  onto the old behaviour would have been a control that claimed to do something it did not.
+- **An administrator could suspend or demote themselves.** Admins could change any account's
+  `role` and `status`, their own included — a one-click lockout, and with one administrator, a
+  lockout of everyone. The backend now refuses a self-change to either field with 403.
+- **Every admin page also highlighted Overview.** The sidebar matched by prefix, and `/admin`
+  prefixes every admin route. The active link is now the longest match.
+- **The `/usage` blueprint and billing plan F2 described an endpoint that no longer existed** —
+  a three-shape union normalised in `lib/utils/usage.ts`. It returns one shape and the
+  normaliser is gone; both documents now say so.
+- **The brand accent fails as a data colour.** `#1f4e3d` is too dark (OKLCH L 0.386) and too
+  grey (C 0.06) to read as a mark. `--colors-chart-series` is the nearest step of the same hue
+  that passes lightness, chroma, and contrast against the card in each theme, found by search
+  and checked by the dataviz validator rather than by eye: `#027254` light, `#449e7d` dark.
+- **Rendering the chart caught a label collision the tests could not.** "Limit 500K" sat on
+  the latest value label, and in any month billed for overage it would have sat on the column
+  itself. Placement is now measured on both sides, with the label dropped when neither is clear.
+
 ## Known gaps, ranked
 
 1. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
-   `stripeInvoiceId` are reference columns.
-2. **No admin user management.** `usersFindAll`, `usersFindOne` and `usersRemove` are generated
-   into the contract but consumed nowhere, because no admin users screen is blueprinted. Per
-   the Phase 2 rule, that screen needs an [experience map](01-information-architecture.md)
-   before it gets a route — recorded here so the unused routes read as a decision.
-3. **The scheduler is in-process.** `@nestjs/schedule` runs in every instance, so a multi-instance
-   deployment must set `BILLING_CYCLE_CRON=off` on all but one. No advisory lock was added: the
-   jobs are idempotent by construction, and a Prisma connection pool cannot hold a session-level
-   advisory lock across two queries, so a lock would have promised more than it delivered.
-4. **Charts deferred.** Usage history renders as a table.
+   `stripeInvoiceId` are reference columns. The add-card form is deferred with it, since a form
+   that invents a token would tell a customer their card is on file when nothing was tokenised.
+2. **The in-process scheduler has no cross-instance lock.** With more than one instance, run
+   `BILLING_CYCLE_CRON=off` on all of them and trigger externally with the cycle token. No
+   advisory lock was added: the jobs are idempotent by construction, and a Prisma connection
+   pool cannot hold a session-level advisory lock across two queries.
+3. **The customer list is unpaginated.** `GET /users` returns every account and the table
+   filters client-side, which is right at this scale and wrong at tens of thousands. Paging
+   belongs on the endpoint, not in the component.
 
 ## Found by the new tests
 
@@ -159,13 +203,13 @@ one file.
 **Verification gates** — green on **both** sides, which was not previously true: the backend's
 `pnpm lint` exited 1 while this checklist claimed otherwise.
 
-| Gate         | Frontend                    | Backend           |
-| ------------ | --------------------------- | ----------------- |
-| `lint`       | 0 (incl. 7 custom rules)    | 0                 |
-| `type-check` | 0                           | 0                 |
-| `test`       | 181, two Vitest projects    | 48, Jest          |
-| `test:e2e`   | 11, Playwright, no database | 19, real Postgres |
-| `build`      | 17 routes                   | clean             |
+| Gate         | Frontend                             | Backend           |
+| ------------ | ------------------------------------ | ----------------- |
+| `lint`       | 0 (incl. 7 custom rules)             | 0                 |
+| `type-check` | 0                                    | 0                 |
+| `test`       | 234 in 29 files, two Vitest projects | 65, Jest          |
+| `test:e2e`   | 19, Playwright, no database          | 19, real Postgres |
+| `build`      | 17 routes, 18 with `_not-found`      | clean             |
 
 `pnpm test` runs both Vitest projects: `node` for tooling, logic and auth verification, and
 `react` in jsdom for components and hooks. The frontend's `test:e2e` stubs the API and needs no
