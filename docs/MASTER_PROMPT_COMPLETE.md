@@ -56,7 +56,7 @@ the working tree, not estimated.
 | `ROLE`                 | `ADMIN \| USER` — exactly these two                                                                                         |
 | `DOMAIN_TOOL`          | The **usage meter**: quota consumed vs. plan limit. The hero interaction.                                                   |
 | `DOMAIN_TRANSACTION`   | Plan selection / plan change — the billing-state mutation                                                                   |
-| `DOMAIN_SPECIFIC_LIBS` | **None.** No maps, no geo, no editor. Charts deferred until a real series exists.                                           |
+| `DOMAIN_SPECIFIC_LIBS` | **None.** No maps, no geo, no editor. Charts are hand-drawn SVG — no charting library.                                      |
 | `THEME_VARIANT`        | Dark, derived from the same tokens (`.dark` in [`styles/tokens.css`](../styles/tokens.css))                                 |
 | `SCALE_TARGET`         | Millions of subscriptions                                                                                                   |
 | `COMPONENT_COUNT`      | **33** — 16 `common/` · 6 `layout/` · 9 `ui/forms/` · 1 provider · 1 wrapper                                                |
@@ -435,7 +435,7 @@ states · Actions · Dependencies · Implementation notes.
 **All four states are mandatory on every data surface.** A page blueprint that omits its empty
 state is incomplete, not concise.
 
-### Settled for Meter — the 16 routes
+### Settled for Meter — the 17 routes
 
 The template's generic page list (Search, Compare, Favourites, Messages, Help Center, …) was a
 marketplace vocabulary. Meter's actual surface:
@@ -456,6 +456,7 @@ marketplace vocabulary. Meter's actual surface:
 | `/settings`             | Profile, account, payment methods              |
 | `/admin`                | Ops overview — platform health                 |
 | `/admin/plans`          | Catalogue administration                       |
+| `/admin/users`          | Customer lookup; suspend and restore access    |
 | `/admin/subscriptions`  | Subscription oversight                         |
 | `/admin/invoices`       | Invoice health, overdue                        |
 
@@ -1073,17 +1074,17 @@ Each file is self-contained but interconnected with the others.
 
 Where Meter departs from the generic template it was generated from, and why.
 
-| Departure                                          | Reason                                                                                                                                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **9 documents, not 16**                            | Seven files carry Phases 1–10, the README carries Phase 11, and one is work in progress. Phases 4, 5 and 6 were split apart once each outgrew a shared file. Revisit past ~12. |
-| **Phase 11's six ancillary files reduced to two**  | START_HERE, DESIGN-OS-COMPLETE, ARTIFACT_INDEX, SETUP-CHECKLIST and IMPLEMENTATION_PROMPT are navigation layers; their specs are retained above and marked superseded.         |
-| **A third styling layer (`components.css`)**       | Pattern classes in `globals.css` would have doubled that file. The split also gives every breakpoint one home.                                                                 |
-| **Stages instead of `{{TIMELINE_WEEKS}}`**         | Eight stages were delivered and are verifiable; the week count never was. Recording an unmeasured estimate would be a fabrication.                                             |
-| **Template page list replaced**                    | Search, Compare, Favourites, Messages and Help Center are marketplace vocabulary with no persona, flow or endpoint in this product.                                            |
-| **No stores, no contexts**                         | React Query owns server state and the session is an httpOnly cookie the client never reads. Neither layer has a job.                                                           |
-| **Charts deferred**                                | Usage history renders as a table. A charting library is a dependency decision, and there is no real series to plot until the database runs.                                    |
-| **No E2E tests**                                   | Needs Playwright, which the Library Selection Policy says is proposed, not installed unilaterally. Component tests now exist.                                                  |
-| **`no-comments` extends the template's standards** | Explanation belongs in these documents, where it is reviewable, not scattered through TSX where it rots.                                                                       |
+| Departure                                          | Reason                                                                                                                                                                                               |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **9 documents, not 16**                            | Seven files carry Phases 1–10, the README carries Phase 11, and one is work in progress. Phases 4, 5 and 6 were split apart once each outgrew a shared file. Revisit past ~12.                       |
+| **Phase 11's six ancillary files reduced to two**  | START_HERE, DESIGN-OS-COMPLETE, ARTIFACT_INDEX, SETUP-CHECKLIST and IMPLEMENTATION_PROMPT are navigation layers; their specs are retained above and marked superseded.                               |
+| **A third styling layer (`components.css`)**       | Pattern classes in `globals.css` would have doubled that file. The split also gives every breakpoint one home.                                                                                       |
+| **Stages instead of `{{TIMELINE_WEEKS}}`**         | Eight stages were delivered and are verifiable; the week count never was. Recording an unmeasured estimate would be a fabrication.                                                                   |
+| **Template page list replaced**                    | Search, Compare, Favourites, Messages and Help Center are marketplace vocabulary with no persona, flow or endpoint in this product.                                                                  |
+| **No stores, no contexts**                         | React Query owns server state and the session is an httpOnly cookie the client never reads. Neither layer has a job.                                                                                 |
+| **Charts without a library**                       | Usage history is small-multiple column charts in inline SVG, one per metric on its own scale, with the table kept as a disclosure. Three single-series charts did not justify a charting dependency. |
+| **No E2E tests**                                   | Needs Playwright, which the Library Selection Policy says is proposed, not installed unilaterally. Component tests now exist.                                                                        |
+| **`no-comments` extends the template's standards** | Explanation belongs in these documents, where it is reviewable, not scattered through TSX where it rots.                                                                                             |
 
 ---
 

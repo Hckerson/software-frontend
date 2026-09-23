@@ -200,13 +200,13 @@ only issuance and delivery are missing.
 
 ## Phase F — Verification
 
-| #   | Work                                            | Notes                                                                                                                                                          |
-| --- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| F1  | ~~`@ApiOkResponse({ type })` on every handler~~ | **Done.** All 49 operations declare a success shape; response schemas generate and `lib/types` is aliases over them.                                           |
-| F2  | Collapse `GET /usage/current` to one shape      | It returns three today, normalised client-side in `lib/utils/usage.ts`.                                                                                        |
-| F3  | ~~Component tests~~                             | **Done.** Vitest runs a jsdom `components` project; the `common/` components carrying a design principle are covered.                                          |
-| F4  | ~~E2E~~                                         | **Done.** Playwright drives Chromium against the real proxy and UI; the API is stubbed per test, so the suite runs without a database.                         |
-| F5  | ~~Integration tests for the cycle~~             | **Done.** 15 tests in `test/cycle.e2e-spec.ts` against a real Postgres: issuance, renewal, the overdue sweep, both idempotency guarantees and the audit trail. |
+| #   | Work                                            | Notes                                                                                                                                                                                                |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | ~~`@ApiOkResponse({ type })` on every handler~~ | **Done.** All 49 operations declare a success shape; response schemas generate and `lib/types` is aliases over them.                                                                                 |
+| F2  | ~~Collapse `GET /usage/current` to one shape~~  | **Done.** It returns `MetricUsage[]`, and the client-side normaliser has been removed. This row and the `/usage` blueprint both still described the old union until a later pass checked the source. |
+| F3  | ~~Component tests~~                             | **Done.** Vitest runs a jsdom `components` project; the `common/` components carrying a design principle are covered.                                                                                |
+| F4  | ~~E2E~~                                         | **Done.** Playwright drives Chromium against the real proxy and UI; the API is stubbed per test, so the suite runs without a database.                                                               |
+| F5  | ~~Integration tests for the cycle~~             | **Done.** 15 tests in `test/cycle.e2e-spec.ts` against a real Postgres: issuance, renewal, the overdue sweep, both idempotency guarantees and the audit trail.                                       |
 
 ---
 

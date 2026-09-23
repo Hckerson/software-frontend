@@ -16,6 +16,11 @@
     --colors-accent-dark: #163a2d;
     --colors-accent-light: #e9f0ec;
 
+    /* Chart series colour. The accent is a text-and-button colour and fails
+       as a data mark (too dark, too grey); this is the nearest step of the
+       same hue that passes the dataviz checks against the light card. */
+    --colors-chart-series: #027254;
+
     /* Highlight — secondary/featured accent, pop moments */
     --colors-highlight: #b08d57;
     --colors-highlight-dark: #93733f;
@@ -305,6 +310,9 @@
     --colors-accent: #4a9e7f;
     --colors-accent-dark: #3d8368;
     --colors-accent-light: #1c302a;
+
+    /* Validated separately against the dark card, not flipped from light. */
+    --colors-chart-series: #449e7d;
 
     /* Highlight */
     --colors-highlight: #c9a670;

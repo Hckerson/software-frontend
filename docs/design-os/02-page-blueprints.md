@@ -4,7 +4,7 @@ References [Phase 1](00-product-definition.md) and [Phases 2–3](01-information
 Governs [`app/`](../../app/). Sections are blueprinted in
 [Phase 5](06-section-blueprints.md); components in [Phase 6](07-component-library.md).
 
-**18 surfaces** — 16 routes plus `not-found` and `error`.
+**19 surfaces** — 17 routes plus `not-found` and `error`.
 
 ---
 
@@ -58,7 +58,8 @@ route contains a breakpoint.
 **Permissions:** public — the only route outside the shell and outside auth.
 **Actions:** → `/auth/register`.
 **States:** skeleton while plans load; **no empty state** — a catalogue with no plans is a
-deployment fault, not a user-facing condition.
+deployment fault, not a user-facing condition. A failed request renders `ErrorState` with a
+retry under the pricing heading.
 **Implementation note:** the **only** route permitted the editorial register. It opts out of
 `starter/application-register-density` through an explicit `files` block in
 [`eslint.config.ts`](../../eslint.config.ts) — an opt-out on the record, not a disable comment.
@@ -83,9 +84,9 @@ landing on `/auth/login` is a navigation bug, not a sign-out affordance.
 **Failure must never clear typed values.**
 **Success:** the backend sets the httpOnly session cookie and the route redirects to `next` or
 `/dashboard`. **The client stores nothing.**
-**Dependency:** password reset is
-[not yet delivered end to end](05-billing-cycle-plan.md) — the surfaces exist ahead of the
-mail path.
+**Dependency:** password reset is delivered end to end — the backend emails the link through
+`SmtpResetDelivery` when `SMTP_HOST` is set, and logs it otherwise, so an unconfigured
+environment still boots. See [Phase E](05-billing-cycle-plan.md#phase-e--password-reset).
 
 ---
 
@@ -130,12 +131,17 @@ until `@@unique([userId, status])` is lifted.
 ### `/usage` — Usage detail
 
 **Modules:** `usage-summary` (reused from the dashboard) · `usage-history`.
-**Data:** `GET /usage/current`, `GET /usage/history`.
-**Implementation note:** `GET /usage/current` returns a union of three shapes
-(`UsageLog | UsageLog[] | { amount, metricType, period }`). **The frontend normalises this in
-exactly one place** — [`lib/utils/usage.ts`](../../lib/utils/usage.ts) — and every consumer reads
-the normalised form. Collapsing the endpoint to one shape is
-[tracked](05-billing-cycle-plan.md).
+**Data:** `GET /usage/current`, `GET /usage/history`, and the current plan's limits from
+`GET /subscriptions/current`.
+**History is charted, one chart per metric.** API calls, storage and seats differ by five
+orders of magnitude, so each metric gets its own column chart and its own scale — a shared or
+dual axis would invent a relationship between them. Each chart draws the current plan's limit
+as a dashed rule, so a month billed for overage is visibly over the line. The table stays
+beneath as a disclosure: every plotted value is reachable without hovering.
+**Implementation note:** `GET /usage/current` returns one shape, `MetricUsage[]`. It once
+returned a union of three and was normalised client-side; that was
+[collapsed on the backend](05-billing-cycle-plan.md#phase-f--verification) and the normaliser
+is gone.
 **Rule:** a missing log for the period is **zero consumed, not an error**. A `null` limit is
 unlimited, not zero.
 
@@ -166,12 +172,13 @@ ever enters this app.
 Reachable only after the proxy has verified an `ADMIN` claim. **No admin route checks a role
 itself.**
 
-| Route                  | Modules                                                              | Data                                                                          |
-| ---------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `/admin`               | `admin-overview` · `admin-cycle-controls` · `admin-overdue-invoices` | `GET /admin/stats`, `GET /admin/billing/stats`, `POST .../cycle/*`            |
-| `/admin/plans`         | `admin-plan-list` · `admin-plan-edit` · `admin-plan-form`            | `GET /billing/plans` + create · edit · activate · deactivate · delete         |
-| `/admin/subscriptions` | `admin-subscription-list` · `issue-invoice-button`                   | `GET /admin/billing/subscriptions[/status/:status]`, `POST .../issue-invoice` |
-| `/admin/invoices`      | `admin-invoice-health` · `admin-overdue-invoices`                    | `GET /admin/billing/overdue-invoices`, `GET /admin/billing/invoice-stats`     |
+| Route                  | Modules                                                              | Data                                                                               |
+| ---------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `/admin`               | `admin-overview` · `admin-cycle-controls` · `admin-overdue-invoices` | `GET /admin/stats`, `GET /admin/billing/stats`, `POST .../cycle/*`                 |
+| `/admin/plans`         | `admin-plan-list` · `admin-plan-edit` · `admin-plan-form`            | `GET /billing/plans` + create · edit · activate · deactivate · delete              |
+| `/admin/users`         | `admin-user-list` · `account-status-button`                          | `GET /users`, `GET /admin/billing/subscriptions`, `PATCH /users/:id` (status only) |
+| `/admin/subscriptions` | `admin-subscription-list` · `issue-invoice-button`                   | `GET /admin/billing/subscriptions[/status/:status]`, `POST .../issue-invoice`      |
+| `/admin/invoices`      | `admin-invoice-health` · `admin-overdue-invoices`                    | `GET /admin/billing/overdue-invoices`, `GET /admin/billing/invoice-stats`          |
 
 **The console is no longer read-only.** `/admin` carries the billing cycle, and
 `/admin/subscriptions` can issue a single period's invoice. Both are **write actions behind a

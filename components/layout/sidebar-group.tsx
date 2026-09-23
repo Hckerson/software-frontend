@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { activeHref } from "@/lib/utils/navigation";
 import type { NavItem } from "@/lib/data/navigation";
 
 interface Props {
@@ -8,11 +9,12 @@ interface Props {
     items: NavItem[];
 }
 
-const isActive = (pathname: string, href: string): boolean =>
-    pathname === href || pathname.startsWith(`${href}/`);
-
 export default function SidebarGroup({ label, items }: Props) {
     const pathname = usePathname();
+    const active = activeHref(
+        pathname,
+        items.map((item) => item.href),
+    );
 
     return (
         <nav className="flex flex-col gap-1" aria-label={label}>
@@ -22,10 +24,8 @@ export default function SidebarGroup({ label, items }: Props) {
                     key={item.href}
                     href={item.href}
                     className="nav-link"
-                    data-active={isActive(pathname, item.href)}
-                    aria-current={
-                        isActive(pathname, item.href) ? "page" : undefined
-                    }
+                    data-active={item.href === active}
+                    aria-current={item.href === active ? "page" : undefined}
                 >
                     <item.icon className="size-4 shrink-0" strokeWidth={1.5} />
                     {item.label}

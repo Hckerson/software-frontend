@@ -15,6 +15,7 @@
         "codemod:extract-hooks": "jiti tools/codemods/run-extract-transport-to-hook.ts",
         "contract": "jiti tools/contract/run-generate-contract.ts",
         "contract:check": "jiti tools/contract/run-generate-contract.ts --check",
+        "design:audit": "jiti tools/design-audit/run-design-audit.ts",
         "lint": "eslint",
         "prepare": "husky"
     },

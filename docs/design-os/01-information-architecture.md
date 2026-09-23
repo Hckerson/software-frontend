@@ -68,6 +68,28 @@ because subscriptions reference plans.
 Entry: `/admin`. Counters → drill into `/admin/subscriptions` filtered by status, or
 `/admin/invoices` for overdue. Read-only by design.
 
+### E7 · Look up and act on a customer (Internal Ops, Support)
+
+Intent: "who is this, and can they get in?" Trigger: a support ticket names an email, or the
+suspended-accounts counter on `/admin` moves. Entry: `/admin/users`.
+
+Journey: search by name or email → read the row: role, account status, current plan and
+subscription status, last active → act: **suspend** or **reactivate**.
+
+Decision point: suspend is reversible, delete is not offered. `DELETE /users/:id` cascades to
+the account's subscriptions and invoices, so it would destroy billing history and the audit
+trail along with the person; suspension removes access and keeps the record. The route stays
+generated in the contract and deliberately unconsumed.
+
+Failure paths: an administrator's own row offers no action, and the backend refuses a
+self-change to `role` or `status` with 403 — suspending yourself locks you out, and if you are
+the last administrator, locks everyone out. A failed change keeps the row as it was and shows
+the reason on the button. If the subscription list fails, accounts still render with the plan
+columns empty and a notice saying why, rather than the whole screen erroring.
+
+Completion: the row reads **Suspended**; that account's next request is refused 401 and a
+sign-in attempt 403. Reactivating restores access with the subscription untouched.
+
 ## Sitemap
 
 ```
@@ -87,6 +109,7 @@ Entry: `/admin`. Counters → drill into `/admin/subscriptions` filtered by stat
 
 /admin                     Ops counters                                         [ADMIN]
 /admin/plans               Plan catalogue CRUD                                  [ADMIN]
+/admin/users               Customer lookup; suspend and restore access          [ADMIN]
 /admin/subscriptions       All subscriptions, status filter                     [ADMIN]
 /admin/invoices            Overdue invoices + invoice stats                     [ADMIN]
 
@@ -99,11 +122,15 @@ Entry: `/admin`. Counters → drill into `/admin/subscriptions` filtered by stat
 Two groups in one sidebar. The admin group renders only for `role === "ADMIN"` — absent, not
 disabled, because a disabled control invites a support ticket.
 
-| Group                    | Items                                           |
-| ------------------------ | ----------------------------------------------- |
-| Billing                  | Dashboard, Usage, Subscription, Invoices, Plans |
-| Administration _(ADMIN)_ | Overview, Plans, Subscriptions, Invoices        |
-| —                        | Settings, Sign out (footer)                     |
+**One link is current at a time — the longest one that matches.** `/admin` is a prefix of every
+admin route, so plain prefix matching lit Overview on every admin page alongside the page's own
+link. `/invoices/[id]` still lights Invoices, because no longer link matches it.
+
+| Group                    | Items                                                                |
+| ------------------------ | -------------------------------------------------------------------- |
+| Billing                  | Dashboard, Usage, Subscription, Invoices, Plans                      |
+| Administration _(ADMIN)_ | Overview, Plan catalogue, Customers, Subscriptions, Overdue invoices |
+| —                        | Settings, Sign out (footer)                                          |
 
 ## Permissions
 

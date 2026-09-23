@@ -18,7 +18,7 @@
 | `{{ROLE_DASHBOARDS}}`                        | Customer dashboard, Admin console                                                                  |
 | `{{DOMAIN_TRANSACTION}}`                     | Plan selection / plan change (the billing-state mutation)                                          |
 | `{{DOMAIN_TOOL}}`                            | Usage meter — quota consumed vs. plan limit                                                        |
-| `{{DOMAIN_SPECIFIC_LIBS}}`                   | None. No maps, no geo, no editor. Charts deferred until a real series exists.                      |
+| `{{DOMAIN_SPECIFIC_LIBS}}`                   | None. No maps, no geo, no editor. Charts are hand-drawn SVG — no charting library.                 |
 | `{{THEME_VARIANT}}`                          | Dark theme, already derived from the same tokens (`.dark` in `styles/tokens.css`)                  |
 | `{{OUTPUT_DIR}}`                             | `docs/design-os/`                                                                                  |
 
@@ -77,6 +77,13 @@ along this seam.
   does not, the request is refused at the limit. A metric absent from `limits` is unlimited
   and is never billed for overage.
 - Plan tiers are exactly `FREE`, `PRO`, `ENTERPRISE`.
+- A **suspended account cannot sign in, and a session it already holds stops working on its
+  next request** — suspension is checked on every authenticated request, not only at sign-in,
+  or a suspended customer would keep working for the rest of a seven-day token. Suspension
+  never touches the subscription, invoices or history; reactivating restores access intact.
+- **Nobody changes their own role or status**, administrators included. An administrator who
+  suspends or demotes themselves locks themselves out; that change goes through another
+  administrator.
 - Deactivating a plan must not cascade to subscriptions; `Subscription.plan` has no
   `onDelete: Cascade` and that is deliberate.
 

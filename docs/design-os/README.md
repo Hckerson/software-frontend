@@ -27,7 +27,7 @@ their plan. Admins own the plan catalogue and watch platform health. The core en
 
 ## The system, in numbers
 
-**16 routes** (plus `not-found` and `error`) · **38 sections** · **33 components** ·
+**17 routes** (plus `not-found` and `error`) · **44 sections** · **33 components** ·
 **3 metered dimensions** · **3 plan tiers** · **7 custom lint rules**.
 
 ## Where the rules live

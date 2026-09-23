@@ -16,9 +16,9 @@ expressed twice.
 - [The section contract](#the-section-contract)
 - [The one-job rule](#the-one-job-rule)
 - [`auth/`](#auth--4-sections) · [`dashboard/`](#dashboard--3-sections) ·
-  [`usage/`](#usage--3-sections) · [`plans/`](#plans--3-sections) ·
+  [`usage/`](#usage--7-sections) · [`plans/`](#plans--3-sections) ·
   [`subscription/`](#subscription--4-sections) · [`invoices/`](#invoices--3-sections) ·
-  [`settings/`](#settings--5-sections) · [`admin/`](#admin--11-sections) ·
+  [`settings/`](#settings--5-sections) · [`admin/`](#admin--13-sections) ·
   [`landing/`](#landing--2-sections)
 - [Reuse graph](#reuse-graph)
 
@@ -149,7 +149,7 @@ that is `invoice-list`'s job.
 
 ---
 
-## `usage/` — 3 sections
+## `usage/` — 7 sections
 
 ### `meter-row` — the hero interaction
 
@@ -164,10 +164,50 @@ unlimited, not zero.
 ### `usage-history`
 
 **One job:** the per-metric ledger over time.
-**Data:** `useUsageHistory`. **Composes:** `SectionCard`, `DataTable`, `Skeleton`,
-`EmptyState`, `ErrorState`.
-**Notes:** a table, not a chart — [charts are deferred](04-roadmap-and-qa.md#known-gaps-ranked)
-until a real series exists and a dependency is approved.
+**Data:** `useUsageHistory`, and `useCurrentSubscription` for the plan's limits.
+**Composes:** `SectionCard`, `usage-trend-chart` × 3, `DataTable` inside a `<details>`,
+`Skeleton`, `EmptyState`, `ErrorState`.
+**Notes:** **small multiples, never one shared chart** — calls run to 500,000 and seats to 10,
+so a shared axis flattens seats to nothing and a dual axis invents a correlation. The table is
+the chart's table-view twin, kept as a native disclosure so every value is reachable without
+hovering and with no script. A metric with no history draws no chart rather than an empty one.
+
+### `usage-trend-chart`
+
+**One job:** one metric's consumption per billing period, against its limit.
+**Data:** none — props (`points`, `limit`, `unit`). **Composes:** `trend-axes`, `trend-limit`,
+`trend-tooltip`.
+**Notes:** inline SVG with no charting library. One series, so no legend; the caption names it.
+Columns are capped at 24 units with rounded data-ends; only the **latest** value is labelled.
+**`limit` is three-state:** a number draws the rule, `null` says "unlimited on your plan", and
+`undefined` — the plan still loading — says nothing, because claiming "unlimited" before the
+plan arrives would be false. Every column carries a full-band hit target that is focusable and
+announces its value, so keyboard and pointer get the same readout. Scales step in 1·2·5 with a
+minimum step of 1, since every metric is a whole number. The series colour is
+`--colors-chart-series`, a validated sibling of the brand accent: the accent itself fails as a
+data mark (too dark and too grey in light mode).
+
+### `trend-axes`
+
+**One job:** gridlines, value ticks and period labels. **Data:** none — props.
+**Notes:** gridlines are solid hairlines; dashing is reserved for the limit, which is a
+threshold. Period labels thin to about six and always keep the latest.
+
+### `trend-limit`
+
+**One job:** the plan limit as a dashed rule, and its label when there is room.
+**Data:** none — props.
+**Notes:** the label is **placed by measurement, not by default**: right-hand if the columns
+beneath that span sit well clear of the rule, else left-hand, else omitted — the caption
+already states the limit, so dropping the in-plot label loses nothing. A fixed placement put
+"Limit 500K" on top of the latest value label, and on top of the column itself in any month
+billed for overage.
+
+### `trend-tooltip`
+
+**One job:** the hover and focus readout. **Data:** none — props.
+**Notes:** the value leads and the period follows. It enhances and never gates: everything it
+shows is also in the table.
 
 `usage-summary` is blueprinted under [`dashboard/`](#dashboard--3-sections).
 
@@ -277,7 +317,7 @@ identity change is not a profile edit and must not ride along in the same PATCH.
 
 ---
 
-## `admin/` — 11 sections
+## `admin/` — 13 sections
 
 Reachable only after [`proxy.ts`](../../proxy.ts) has verified an `ADMIN` claim
 server-side. **No section performs an authorisation check** — by the time one renders,
@@ -296,6 +336,24 @@ authorisation has already happened twice (the proxy, then the backend's `RolesGu
 | `cycle-run-report`        | Report one cycle half (pure)         | none — props                                                      |
 | `issue-invoice-button`    | Issue one subscription's invoice     | `useIssueInvoice`                                                 |
 | `plan-metric-fields`      | The per-metric limit and rate inputs | none — props                                                      |
+| `admin-user-list`         | Find a customer and see their state  | `useAdminUsers`, `useAdminSubscriptions`, `useCurrentUser`        |
+| `account-status-button`   | Suspend or restore one account       | `useSetAccountStatus`                                             |
+
+**`admin-user-list`** answers "who is this, and can they get in?" — the [E7](01-information-architecture.md#e7--look-up-and-act-on-a-customer-internal-ops-support)
+journey. It joins each account to its most relevant subscription client-side (live before past
+due before suspended before canceled, then newest), so a customer who cancelled last month and
+resubscribed shows the live plan. Search is by name or email; the status filter narrows to
+active, pending or suspended. If the subscription list fails, accounts still render with the
+plan columns empty and a notice, rather than one failure erasing the whole screen.
+
+**`account-status-button`** confirms before it changes anything, and sends **only**
+`{ status }`. It renders no control on the viewer's own row — the backend refuses that change
+anyway, so offering it would be a button guaranteed to fail. It is `quiet`, not `danger`: a
+column of red buttons down a customer list is noise, and the destructive weight belongs in the
+confirmation, which says plainly that history is kept.
+
+**`DELETE /users/:id` is deliberately not wired.** It cascades to subscriptions and invoices,
+destroying billing history along with the account. Suspension is the reversible answer.
 
 **`admin-plan-list`** carries the catalogue's two lifecycle rules, both of which are business
 rules before they are UI: **deactivating a plan must not cascade** to the subscriptions
@@ -343,14 +401,16 @@ The **only** sections permitted the editorial register; every other section is b
 - **`landing-hero`** — value proposition and the call to action into `/auth/register`. No data.
 - **`landing-plans`** — public plan preview. `usePlans`; composes `PlanFeatureList` and `Money`.
   Skeleton while loading; **no empty state** — a catalogue with no plans is a deployment fault,
-  not a user-facing condition, and must not render an empty marketing page.
+  not a user-facing condition, and must not render an empty marketing page. **A failed request
+  is not an empty catalogue**: the section keeps its heading and renders `ErrorState` with a
+  retry, so a visitor sees that pricing exists and failed to load rather than a page without it.
 
 ---
 
 ## Reuse graph
 
-Fifteen sections compose another section. Every edge exists to stop two surfaces describing
-the same record differently.
+Twenty edges between sections. Every edge exists to stop two surfaces describing the same
+record differently, or to keep a component under the 150-line ceiling by one job apiece.
 
 ```
 usage-summary ──────────→ meter-row              the hero, composed on 2 routes
@@ -366,6 +426,11 @@ admin-plan-list ────────→ admin-plan-edit ──→ plan-metri
 admin-plan-form ────────→ plan-metric-fields     create form = edit form
 admin-cycle-controls ───→ cycle-run-report       composed twice, once per half
 admin-subscription-list → issue-invoice-button   one mutation per row
+admin-user-list ────────→ account-status-button  one mutation per row
+usage-history ──────────→ usage-trend-chart      composed once per metric
+usage-trend-chart ──────→ trend-axes
+usage-trend-chart ──────→ trend-limit
+usage-trend-chart ──────→ trend-tooltip
 ```
 
 **A section imported by two others is a shared description and must stay pure.** If one of
