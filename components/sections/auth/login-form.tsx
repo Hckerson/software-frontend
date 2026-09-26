@@ -8,7 +8,8 @@ import ErrorState from "@/components/common/error-state";
 import { useLogin } from "@/lib/hooks/use-auth";
 import { loginSchema } from "@/lib/validations/auth";
 import { validate } from "@/lib/utils/form-errors";
-import { HOME_PATH, REDIRECT_PARAM } from "@/lib/constants";
+import { internalPath } from "@/lib/utils/internal-path";
+import { REDIRECT_PARAM } from "@/lib/constants";
 import type { FieldErrors } from "@/lib/utils/form-errors";
 import type { FormEvent } from "react";
 
@@ -16,7 +17,7 @@ export default function LoginForm() {
     const router = useRouter();
     const params = useSearchParams();
     const login = useLogin();
-    const destination = params.get(REDIRECT_PARAM) ?? HOME_PATH;
+    const destination = internalPath(params.get(REDIRECT_PARAM));
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState<FieldErrors>({});

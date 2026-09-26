@@ -1,14 +1,15 @@
-// Example: API route configuration (replace with your actual endpoints)
+import { API_BASE_URL } from "@/lib/constants";
+
 export const config = {
     api: {
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api",
+        baseUrl: API_BASE_URL,
         auth: {
-            login: "/auth/login",
-            logout: "/auth/logout",
+            login: "/api/auth/login",
+            logout: "/api/auth/logout",
         },
         users: {
-            all: "/users",
-            detail: (id: string) => `/users/${id}`,
+            all: "/api/users",
+            detail: (id: string) => `/api/users/${id}`,
         },
     },
 };

@@ -7,7 +7,7 @@ export const DEFAULT_CURRENCY = "USD";
 export const EMPTY_VALUE = "—";
 
 export const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export const AUTH_COOKIE = "access_token";
 
@@ -48,8 +48,10 @@ export const USAGE_THRESHOLD = {
 } as const;
 
 export const MOTION_DURATION = {
-    fast: 0.1,
-    slow: 0.2,
+    fast: 0.2,
+    normal: 0.35,
+    slow: 0.6,
+    slower: 0.8,
 } as const;
 
 export const MOTION_SPRING = {

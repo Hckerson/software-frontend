@@ -38,6 +38,14 @@ const createProject = (files: Record<string, string>): Project => {
         };`,
     );
 
+    project.createSourceFile(
+        "/lib/contract/routes.ts",
+        `export const routes = {
+            usersFindAll: () => "/api/users",
+            usersFindOne: (id: string) => "/api/users/" + id,
+        };`,
+    );
+
     for (const [path, content] of Object.entries(files)) {
         project.createSourceFile(path, content);
     }
@@ -152,6 +160,66 @@ describe("extract-transport-to-hook", () => {
 
         expect(plan.extractions).toEqual([]);
         expect(plan.skips[0].reason).toContain("filters");
+    });
+
+    it("names the hook after the contract operation it calls", () => {
+        const project = createProject({
+            "/components/common/user-detail.tsx": `
+                import { query } from "@/lib/api-client";
+                import { routes } from "@/lib/contract/routes";
+
+                export function UserDetail({ id }: { id: string }) {
+                    return query.get(routes.usersFindOne(id));
+                }
+            `,
+        });
+
+        const plan = planExtraction(project, "");
+
+        expect(plan.skips).toEqual([]);
+        expect(plan.extractions[0].name).toBe("useUsersFindOne");
+        expect(plan.extractions[0].hookPath).toBe(
+            "/lib/hooks/use-users-find-one.ts",
+        );
+    });
+
+    it("reports a same-run collision as a claim, not a stale file", () => {
+        const project = createProject({
+            "/components/common/user-board.tsx": `
+                import { query } from "@/lib/api-client";
+                import { config } from "@/lib/api-routes";
+
+                export function UserBoard({ id }: { id: string }) {
+                    const all = query.get(config.api.users.all);
+                    const one = query.get(config.api.users.detail(id));
+                    return [all, one];
+                }
+            `,
+        });
+
+        const plan = planExtraction(project, "");
+
+        expect(plan.extractions).toHaveLength(1);
+        expect(plan.skips[0].reason).toContain("already claims");
+    });
+
+    it("refuses to overwrite a hook file that already exists", () => {
+        const project = createProject({
+            "/lib/hooks/use-users.ts": `export const useUsers = () => null;`,
+            "/components/common/user-list.tsx": `
+                import { query } from "@/lib/api-client";
+                import { config } from "@/lib/api-routes";
+
+                export function UserList() {
+                    return query.get(config.api.users.all);
+                }
+            `,
+        });
+
+        const plan = planExtraction(project, "");
+
+        expect(plan.extractions).toEqual([]);
+        expect(plan.skips[0].reason).toContain("already exists");
     });
 
     it("leaves existing hooks alone", () => {

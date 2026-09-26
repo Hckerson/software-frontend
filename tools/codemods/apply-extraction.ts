@@ -1,4 +1,4 @@
-import { Project, SourceFile, SyntaxKind } from "ts-morph";
+import { Identifier, Node, Project, SourceFile, SyntaxKind } from "ts-morph";
 import { CopiedImport, Extraction, Plan } from "./plan-extraction";
 import { HOOKS_DIR, rootIdentifier } from "./transport-calls";
 
@@ -59,26 +59,26 @@ export const hookSource = (
     ].join("\n");
 };
 
-const isReferenced = (file: SourceFile, name: string): boolean =>
-    file
-        .getDescendantsOfKind(SyntaxKind.Identifier)
+const isStillUsed = (binding: Identifier): boolean =>
+    binding
+        .findReferencesAsNodes()
         .some(
-            (identifier) =>
-                identifier.getText() === name &&
-                !identifier.getFirstAncestorByKind(
-                    SyntaxKind.ImportDeclaration,
-                ),
+            (reference) =>
+                reference.getSourceFile() === binding.getSourceFile() &&
+                !reference.getFirstAncestorByKind(SyntaxKind.ImportDeclaration),
         );
+
+const isPrunable = (binding: Identifier, names: string[]): boolean =>
+    names.includes(binding.getText()) && !isStillUsed(binding);
 
 const pruneImports = (file: SourceFile, names: string[]): void => {
     for (const declaration of [...file.getImportDeclarations()]) {
         if (!declaration.getImportClause()) continue;
 
         const single =
-            declaration.getNamespaceImport()?.getText() ??
-            declaration.getDefaultImport()?.getText();
+            declaration.getNamespaceImport() ?? declaration.getDefaultImport();
 
-        if (single && names.includes(single) && !isReferenced(file, single)) {
+        if (single && isPrunable(single, names)) {
             declaration.remove();
             continue;
         }
@@ -86,10 +86,9 @@ const pruneImports = (file: SourceFile, names: string[]): void => {
         let emptied = false;
 
         for (const specifier of [...declaration.getNamedImports()]) {
-            const local =
-                specifier.getAliasNode()?.getText() ?? specifier.getName();
+            const local = specifier.getAliasNode() ?? specifier.getNameNode();
 
-            if (names.includes(local) && !isReferenced(file, local)) {
+            if (Node.isIdentifier(local) && isPrunable(local, names)) {
                 specifier.remove();
                 emptied = true;
             }

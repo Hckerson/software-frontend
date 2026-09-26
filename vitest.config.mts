@@ -7,6 +7,9 @@ const TS_MORPH_WARMUP_MS = 30_000;
 const resolve = {
     alias: {
         "@": fileURLToPath(new URL(".", import.meta.url)),
+        "server-only": fileURLToPath(
+            new URL("./node_modules/server-only/empty.js", import.meta.url),
+        ),
     },
 };
 
@@ -19,7 +22,11 @@ export default defineConfig({
                 test: {
                     name: "node",
                     environment: "node",
-                    include: ["tools/**/*.test.ts", "lib/**/*.test.ts"],
+                    include: [
+                        "*.test.ts",
+                        "tools/**/*.test.ts",
+                        "lib/**/*.test.ts",
+                    ],
                     testTimeout: TS_MORPH_WARMUP_MS,
                 },
             },
