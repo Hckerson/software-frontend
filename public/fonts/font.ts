@@ -1,36 +1,25 @@
-import {
-    Inter,
-    Anton_SC,
-    Poppins,
-    Chivo_Mono,
-    Plus_Jakarta_Sans,
-} from "next/font/google";
+import { Fraunces, Libre_Franklin, JetBrains_Mono } from "next/font/google";
 
-const inter = Inter({
-    fallback: ["system-ui", "arial"],
+const display = Fraunces({
     subsets: ["latin"],
+    style: ["normal", "italic"],
+    variable: "--nf-display",
+    display: "swap",
+    fallback: ["Georgia", "Times New Roman", "serif"],
 });
 
-const antonSc = Anton_SC({
-    fallback: ["system-ui", "arial"],
-    weight: ["400"],
+const sans = Libre_Franklin({
     subsets: ["latin"],
+    variable: "--nf-body",
+    display: "swap",
+    fallback: ["system-ui", "Segoe UI", "sans-serif"],
 });
 
-const poppins = Poppins({
-    fallback: ["system-ui", "arial"],
-    weight: ["400", "500", "600", "700"],
+const mono = JetBrains_Mono({
     subsets: ["latin"],
+    variable: "--nf-mono",
+    display: "swap",
+    fallback: ["ui-monospace", "monospace"],
 });
 
-const chivoMono = Chivo_Mono({
-    fallback: ["system-ui", "arial"],
-    subsets: ["latin"],
-});
-
-const jarkata = Plus_Jakarta_Sans({
-    fallback: ["system-ui", "arial"],
-    subsets: ["latin"],
-});
-
-export { inter, chivoMono, jarkata, poppins, antonSc };
+export { display, sans, mono };

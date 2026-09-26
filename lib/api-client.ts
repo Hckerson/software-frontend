@@ -1,111 +1,61 @@
 import axios from "axios";
-import { useAuthStore } from "./auth-store";
+import { ApiError } from "@/lib/errors/api-error";
+import { loginTarget } from "@/lib/utils/login-redirect";
+import { API_BASE_URL, AUTH_PATH_PREFIX, HTTP_STATUS } from "@/lib/constants";
 import type {
+    AxiosError,
     AxiosInstance,
     AxiosRequestConfig,
     AxiosResponse,
-    AxiosError,
 } from "axios";
+import type { ApiErrorBody, ApiResponse } from "@/lib/types";
 
-const defaultConfig: AxiosRequestConfig = {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+export const apiClient: AxiosInstance = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
     headers: {
         "Content-Type": "application/json",
     },
-};
+});
 
-interface Response<T> {
-    data: T;
-    message: string;
-    timestamp: string;
-    statusCode: number;
-}
+const isOnAuthRoute = (): boolean =>
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith(AUTH_PATH_PREFIX);
 
-export const apiClient: AxiosInstance = axios.create(defaultConfig);
-
-const request = async <T>(config: AxiosRequestConfig): Promise<Response<T>> => {
-    const defaultResponse: Response<T> = {
-        data: [] as unknown as T,
-        message: "",
-        timestamp: new Date().toLocaleDateString("en-Us", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-        }),
-        statusCode: 200,
-    };
-
-    try {
-        const response: AxiosResponse = await apiClient.request({
-            ...defaultConfig,
-            ...config,
-        });
-        return response.data as Response<T>;
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            // Silently catch HTTP errors - component handles via isError/isLoading
-            // Uncomment to debug: console.error(error.message);
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError<ApiErrorBody>) => {
+        if (
+            error.response?.status === HTTP_STATUS.unauthorized &&
+            typeof window !== "undefined" &&
+            !isOnAuthRoute()
+        ) {
+            window.location.href = loginTarget(
+                window.location.pathname,
+                window.location.search,
+            );
         }
-        return defaultResponse;
-    }
+
+        return Promise.reject(ApiError.from(error));
+    },
+);
+
+const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
+    const response: AxiosResponse<ApiResponse<T>> =
+        await apiClient.request(config);
+
+    return response.data.data;
 };
 
 export const query = {
-    get: async <T>(url: string, config?: AxiosRequestConfig) => {
-        return await request<T>({ method: "GET", url, ...config });
-    },
-    post: async <T>(
-        url: string,
-        body: unknown,
-        config?: AxiosRequestConfig,
-    ) => {
-        return await request<T>({ method: "POST", url, data: body, ...config });
-    },
-    patch: async <T>(
-        url: string,
-        body: unknown,
-        config?: AxiosRequestConfig,
-    ) => {
-        return await request<T>({
-            method: "PATCH",
-            url,
-            data: body,
-            ...config,
-        });
-    },
-    put: async <T>(url: string, body: unknown, config?: AxiosRequestConfig) => {
-        return await request<T>({ method: "PUT", url, data: body, ...config });
-    },
-    delete: async <T>(url: string, config?: AxiosRequestConfig) => {
-        return await request<T>({ method: "DELETE", url, ...config });
-    },
+    get: <T>(url: string, config?: AxiosRequestConfig) =>
+        request<T>({ method: "GET", url, ...config }),
+    post: <T>(url: string, body: unknown, config?: AxiosRequestConfig) =>
+        request<T>({ method: "POST", url, data: body, ...config }),
+    patch: <T>(url: string, body: unknown, config?: AxiosRequestConfig) =>
+        request<T>({ method: "PATCH", url, data: body, ...config }),
+    put: <T>(url: string, body: unknown, config?: AxiosRequestConfig) =>
+        request<T>({ method: "PUT", url, data: body, ...config }),
+    delete: <T>(url: string, config?: AxiosRequestConfig) =>
+        request<T>({ method: "DELETE", url, ...config }),
 };
-
-apiClient.interceptors.request.use((config) => {
-    // Extract token from Zustand store directly
-    const token = useAuthStore.getState().token;
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
-// Handle 401 Unauthorized responses
-apiClient.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            // Clear auth state on unauthorized
-            useAuthStore.getState().logout();
-
-            // Redirect to login if not already there
-            if (
-                typeof window !== "undefined" &&
-                !window.location.pathname.startsWith("/auth")
-            ) {
-                window.location.href = "/auth/login";
-            }
-        }
-        return Promise.reject(error);
-    },
-);

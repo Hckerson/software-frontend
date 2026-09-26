@@ -1,0 +1,389 @@
+/* Design Tokens — Default Theme (Light) */
+/* CSS Custom Properties — single source of truth. Swap these values to reskin the starter. */
+
+:root {
+    /* ============================================
+     COLORS — Light theme palette
+     ============================================ */
+
+    /* Primary (neutral surface tint) */
+    --colors-primary: #faf8f4;
+    --colors-primary-dark: #efeae2;
+    --colors-primary-light: #ffffff;
+
+    /* Accent — primary brand / CTA */
+    --colors-accent: #1f4e3d;
+    --colors-accent-dark: #163a2d;
+    --colors-accent-light: #e9f0ec;
+
+    /* Chart series colour. The accent is a text-and-button colour and fails
+       as a data mark (too dark, too grey); this is the nearest step of the
+       same hue that passes the dataviz checks against the light card. */
+    --colors-chart-series: #027254;
+
+    /* Highlight — secondary/featured accent, pop moments */
+    --colors-highlight: #b08d57;
+    --colors-highlight-dark: #93733f;
+    --colors-highlight-light: #f4ecdd;
+
+    /* Status Colors */
+    --colors-success: #2f855a;
+    --colors-success-light: #e4f0ea;
+    --colors-warning: #b7791f;
+    --colors-warning-light: #f8eed9;
+    --colors-error: #b4443a;
+    --colors-error-light: #f6e3e0;
+    --colors-info: #3e5c76;
+    --colors-info-light: #e7ecf1;
+
+    /* Backgrounds */
+    --colors-background: #ffffff;
+    --colors-background-alt: #faf8f4;
+    --colors-background-muted: #f2eee7;
+
+    /* Text */
+    --colors-text: #1c1a17;
+    --colors-text-secondary: #57514a;
+    --colors-text-muted: #9a9288;
+    --colors-text-inverse: #ffffff;
+
+    /* Borders */
+    --colors-border: #e7e1d7;
+    --colors-border-light: #f1ece4;
+    --colors-border-dark: #d4ccc0;
+
+    /* Overlays */
+    --colors-overlay: rgba(28, 26, 23, 0.45);
+
+    /* Sidebar Colors (dark nav ramp) */
+    --colors-sidebar: #16241d;
+    --colors-sidebar-border: rgba(255, 255, 255, 0.08);
+    --colors-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --colors-sidebar-active: rgba(255, 255, 255, 0.1);
+    --colors-sidebar-text: rgba(255, 255, 255, 0.6);
+    --colors-sidebar-text-active: #ffffff;
+
+    /* Metric Type Colors */
+    --colors-metric-pipeline: #1f4e3d;
+    --colors-metric-success: #2f855a;
+    --colors-metric-activity: #3e5c76;
+    --colors-metric-warning: #b7791f;
+
+    /* ============================================
+     TYPOGRAPHY — Font families & scales
+     ============================================ */
+
+    --fonts-display: var(--nf-display), Georgia, "Times New Roman", serif;
+    --fonts-body:
+        var(--nf-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+    --fonts-mono: var(--nf-mono), ui-monospace, "JetBrains Mono", monospace;
+
+    /* Font Weights */
+    --font-weights-thin: 100;
+    --font-weights-light: 300;
+    --font-weights-normal: 400;
+    --font-weights-medium: 500;
+    --font-weights-semibold: 600;
+    --font-weights-bold: 700;
+
+    /* Type Scale (Headings) */
+    --font-sizes-h1: 4.5rem;
+    --line-heights-h1: 1.1;
+    --font-weights-h1: 300;
+
+    --font-sizes-h2: 3.5rem;
+    --line-heights-h2: 1.2;
+    --font-weights-h2: 300;
+
+    --font-sizes-h3: 2.5rem;
+    --line-heights-h3: 1.2;
+    --font-weights-h3: 400;
+
+    --font-sizes-h4: 1.875rem;
+    --line-heights-h4: 1.3;
+    --font-weights-h4: 400;
+
+    --font-sizes-h5: 1.5rem;
+    --line-heights-h5: 1.4;
+    --font-weights-h5: 400;
+
+    --font-sizes-h6: 1.25rem;
+    --line-heights-h6: 1.5;
+    --font-weights-h6: 500;
+
+    /* Type Scale (Body) */
+    --font-sizes-lg: 1.125rem;
+    --line-heights-lg: 1.75;
+    --font-weights-lg: 400;
+
+    --font-sizes-base: 1rem;
+    --line-heights-base: 1.75;
+    --font-weights-base: 400;
+
+    --font-sizes-sm: 0.875rem;
+    --line-heights-sm: 1.6;
+    --font-weights-sm: 400;
+
+    --font-sizes-xs: 0.75rem;
+    --line-heights-xs: 1.5;
+    --font-weights-xs: 400;
+
+    /* Labels & Captions */
+    --font-sizes-label: 0.875rem;
+    --line-heights-label: 1.4;
+    --font-weights-label: 600;
+
+    --font-sizes-caption: 0.6875rem;
+    --line-heights-caption: 1.4;
+    --font-weights-caption: 500;
+
+    --font-sizes-micro: 0.625rem;
+    --line-heights-micro: 1.4;
+    --font-weights-micro: 500;
+    --letter-spacings-micro: 0.025em;
+
+    /* Measure */
+    --measures-prose: 54ch;
+
+    /* Line Heights */
+    --line-heights-tight: 1.1;
+    --line-heights-normal: 1.5;
+    --line-heights-relaxed: 1.75;
+    --line-heights-spacious: 2;
+
+    /* ============================================
+     SPACING (8px base unit)
+     ============================================ */
+
+    --spacing-0: 0;
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 1rem;
+    --spacing-4: 1.5rem;
+    --spacing-5: 2rem;
+    --spacing-6: 2.5rem;
+    --spacing-8: 3rem;
+    --spacing-10: 4rem;
+    --spacing-12: 5rem;
+    --spacing-16: 6rem;
+    --spacing-20: 7rem;
+    --spacing-24: 8rem;
+    --spacing-32: 10rem;
+
+    /* Gap (Between items) */
+    --gaps-xs: 0.5rem;
+    --gaps-sm: 1.5rem;
+    --gaps-md: 2.5rem;
+    --gaps-lg: 3rem;
+    --gaps-xl: 5rem;
+
+    /* Padding (Container internal) */
+    --paddings-xs: 0.5rem;
+    --paddings-sm: 1.5rem;
+    --paddings-md: 2.5rem;
+    --paddings-lg: 3rem;
+    --paddings-xl: 4rem;
+    --paddings-2xl: 5rem;
+
+    /* Section Margins (Vertical) */
+    --margins-section-sm: 5rem;
+    --margins-section-md: 6rem;
+    --margins-section-lg: 7rem;
+    --margins-section-xl: 8rem;
+
+    /* ============================================
+     MOTION & ANIMATION
+     ============================================ */
+
+    --durations-fast: 200ms;
+    --durations-normal: 350ms;
+    --durations-slow: 600ms;
+    --durations-slower: 800ms;
+
+    --timing-functions-in: cubic-bezier(0.4, 0, 1, 1);
+    --timing-functions-out: cubic-bezier(0, 0, 0.2, 1);
+    --timing-functions-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --timing-functions-linear: linear;
+    --timing-functions-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    /* ============================================
+     SHADOWS (Depth) — Light theme
+     ============================================ */
+
+    --shadows-sm: 0 1px 3px rgba(28, 24, 17, 0.08);
+    --shadows-md: 0 4px 8px rgba(28, 24, 17, 0.1);
+    --shadows-lg: 0 12px 16px rgba(28, 24, 17, 0.08);
+    --shadows-xl: 0 20px 32px rgba(28, 24, 17, 0.1);
+    --shadows-2xl: 0 30px 60px rgba(28, 24, 17, 0.12);
+
+    --shadows-elevation-1: 0 1px 3px rgba(28, 24, 17, 0.08);
+    --shadows-elevation-2: 0 4px 8px rgba(28, 24, 17, 0.1);
+    --shadows-elevation-3: 0 12px 16px rgba(28, 24, 17, 0.08);
+
+    /* ============================================
+     BORDER RADIUS (Minimal, architectural)
+     ============================================ */
+
+    --radii-none: 0;
+    --radii-xs: 2px;
+    --radii-sm: 4px;
+    --radii-md: 6px;
+    --radii-lg: 8px;
+    --radii-xl: 12px;
+    --radii-full: 9999px;
+
+    /* ============================================
+     BORDERS
+     ============================================ */
+
+    --border-widths-thin: 1px;
+    --border-widths-normal: 1px;
+    --border-widths-thick: 2px;
+
+    /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+
+    --z-indices-base: 0;
+    --z-indices-dropdown: 10;
+    --z-indices-sticky: 20;
+    --z-indices-fixed: 30;
+    --z-indices-modal-backdrop: 40;
+    --z-indices-modal: 50;
+    --z-indices-popover: 60;
+    --z-indices-tooltip: 70;
+
+    /* ============================================
+     OPACITY SCALE
+     ============================================ */
+
+    --opacities-0: 0;
+    --opacities-10: 0.1;
+    --opacities-20: 0.2;
+    --opacities-30: 0.3;
+    --opacities-40: 0.4;
+    --opacities-50: 0.5;
+    --opacities-60: 0.6;
+    --opacities-70: 0.7;
+    --opacities-80: 0.8;
+    --opacities-90: 0.9;
+    --opacities-100: 1;
+
+    /* ============================================
+     STAT CARD & METRIC TOKENS
+     ============================================ */
+
+    /* Stat Card Base — derived, never re-declared */
+    --stat-card-bg: var(--colors-background);
+    --stat-card-border: var(--colors-border-light);
+    --stat-card-border-hover: var(--colors-border);
+    --stat-card-padding: var(--spacing-3);
+    --stat-card-radius: var(--radii-lg);
+    --stat-card-shadow: var(--shadows-sm);
+    --stat-card-shadow-hover: var(--shadows-md);
+
+    /* Icon Sizing */
+    --icon-sizes-xs: 18px;
+    --icon-sizes-sm: 20px;
+    --icon-sizes-md: 24px;
+    --icon-sizes-lg: 32px;
+
+    /* Metric Icon Background Opacity */
+    --icon-bg-opacity: 0.12;
+}
+
+/* ============================================
+   DARK THEME — overrides only. Every non-color
+   token (scale, spacing, motion, radii) is
+   theme-independent and inherited from :root.
+   ============================================ */
+
+.dark {
+    color-scheme: dark;
+
+    /* Primary (neutral surface tint) */
+    --colors-primary: #1a1815;
+    --colors-primary-dark: #131211;
+    --colors-primary-light: #221f1b;
+
+    /* Accent — lightened for AA contrast on dark surfaces */
+    --colors-accent: #4a9e7f;
+    --colors-accent-dark: #3d8368;
+    --colors-accent-light: #1c302a;
+
+    /* Validated separately against the dark card, not flipped from light. */
+    --colors-chart-series: #449e7d;
+
+    /* Highlight */
+    --colors-highlight: #c9a670;
+    --colors-highlight-dark: #ab8a55;
+    --colors-highlight-light: #2e2619;
+
+    /* Status Colors */
+    --colors-success: #4ea87c;
+    --colors-success-light: #17291f;
+    --colors-warning: #d29c3c;
+    --colors-warning-light: #2c2314;
+    --colors-error: #d4695c;
+    --colors-error-light: #2e1c19;
+    --colors-info: #6b8bab;
+    --colors-info-light: #1a222b;
+
+    /* Backgrounds */
+    --colors-background: #131211;
+    --colors-background-alt: #1a1815;
+    --colors-background-muted: #221f1b;
+
+    /* Text */
+    --colors-text: #f5f2ed;
+    --colors-text-secondary: #b8b1a7;
+    --colors-text-muted: #837c72;
+    --colors-text-inverse: #131211;
+
+    /* Borders */
+    --colors-border: #2e2a25;
+    --colors-border-light: #241f1b;
+    --colors-border-dark: #423c34;
+
+    /* Overlays */
+    --colors-overlay: rgba(0, 0, 0, 0.65);
+
+    /* Sidebar Colors */
+    --colors-sidebar: #0e1613;
+    --colors-sidebar-border: rgba(255, 255, 255, 0.08);
+    --colors-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --colors-sidebar-active: rgba(255, 255, 255, 0.12);
+    --colors-sidebar-text: rgba(255, 255, 255, 0.62);
+    --colors-sidebar-text-active: #ffffff;
+
+    /* Metric Type Colors */
+    --colors-metric-pipeline: #4a9e7f;
+    --colors-metric-success: #4ea87c;
+    --colors-metric-activity: #6b8bab;
+    --colors-metric-warning: #d29c3c;
+
+    /* Shadows — deeper on dark surfaces */
+    --shadows-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadows-md: 0 4px 8px rgba(0, 0, 0, 0.45);
+    --shadows-lg: 0 12px 16px rgba(0, 0, 0, 0.45);
+    --shadows-xl: 0 20px 32px rgba(0, 0, 0, 0.5);
+    --shadows-2xl: 0 30px 60px rgba(0, 0, 0, 0.55);
+
+    --shadows-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadows-elevation-2: 0 4px 8px rgba(0, 0, 0, 0.45);
+    --shadows-elevation-3: 0 12px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================
+   REDUCED MOTION (Accessibility)
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+    }
+}

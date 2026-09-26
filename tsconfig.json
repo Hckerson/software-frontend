@@ -27,9 +27,8 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "run.ts",
         ".next/dev/types/**/*.ts",
-        "lib/utils"
+        "**/*.mts"
     ],
     "exclude": ["node_modules"]
 }

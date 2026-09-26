@@ -1,5 +1,5 @@
-import { TransactionStatus } from "../enums/enums";
-import { Trend } from "../types/types";
+import { TransactionStatus } from "@/lib/enums/enums";
+import { Trend } from "@/lib/types";
 
 export interface BaseChartData {
     trend: Trend;
