@@ -41,6 +41,8 @@ export type Skip = { filePath: string; line: number; reason: string };
 
 export type Plan = { extractions: Extraction[]; skips: Skip[] };
 
+type ClaimedHooks = { existing: Set<string>; planned: Set<string> };
+
 const PRIMITIVE_TYPES = ["string", "number", "boolean"];
 
 const asCopiedImport = (identifier: Identifier): CopiedImport | undefined => {
@@ -87,7 +89,7 @@ const asParameter = (
 const planCall = (
     call: CallExpression,
     rootPath: string,
-    taken: Set<string>,
+    claimed: ClaimedHooks,
 ): Extraction | string => {
     if (transportMethod(call) !== READ_METHOD) {
         return "non-GET call needs explicit mutation semantics (cache keys, invalidation)";
@@ -128,8 +130,12 @@ const planCall = (
     const resource = deriveResource(call.getArguments().at(0), "resource");
     const hookPath = `${rootPath}/${HOOKS_DIR}/${hookFileName(resource)}`;
 
-    if (taken.has(hookPath)) {
+    if (claimed.existing.has(hookPath)) {
         return `a hook file for '${resource}' already exists at ${hookPath}`;
+    }
+
+    if (claimed.planned.has(hookPath)) {
+        return `another call in this run already claims the '${resource}' hook`;
     }
 
     return {
@@ -146,15 +152,20 @@ const planCall = (
 export const planExtraction = (project: Project, rootPath: string): Plan => {
     const extractions: Extraction[] = [];
     const skips: Skip[] = [];
-    const taken = new Set(
-        project.getSourceFiles().map((file) => file.getFilePath().toString()),
-    );
+    const claimed: ClaimedHooks = {
+        existing: new Set(
+            project
+                .getSourceFiles()
+                .map((file) => file.getFilePath().toString()),
+        ),
+        planned: new Set<string>(),
+    };
 
     for (const file of project.getSourceFiles()) {
         if (isWithinHooksDir(file.getFilePath())) continue;
 
         for (const call of findTransportCalls(file)) {
-            const result = planCall(call, rootPath, taken);
+            const result = planCall(call, rootPath, claimed);
 
             if (typeof result === "string") {
                 skips.push({
@@ -165,7 +176,7 @@ export const planExtraction = (project: Project, rootPath: string): Plan => {
                 continue;
             }
 
-            taken.add(result.hookPath);
+            claimed.planned.add(result.hookPath);
             extractions.push(result);
         }
     }

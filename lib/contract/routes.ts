@@ -52,4 +52,7 @@ export const routes = {
     paymentMethodsSetDefault: (id: string) =>
         `/api/payment-methods/${id}/default`,
     paymentMethodsRemove: (id: string) => `/api/payment-methods/${id}`,
+    healthCheck: () => "/api/health",
+    statsUsersTotal: () => "/api/stats/users/total",
+    statsUsersSeries: () => "/api/stats/users/series",
 } as const;

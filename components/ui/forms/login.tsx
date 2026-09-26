@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
-import Button from "../../common/button";
+import Button from "@/components/common/button";
 import { loginSchema } from "@/lib/validations/auth";
 
-// Example: Form component with manual state + Zod validation
-export default function LoginForm() {
+export default function Login() {
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -15,7 +14,6 @@ export default function LoginForm() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
-        // Clear error when user starts typing
         if (formErrors[name]) {
             setFormErrors((prev) => {
                 const newErrors = { ...prev };
@@ -33,13 +31,12 @@ export default function LoginForm() {
         if (!result.success) {
             const errors: { [key: string]: string } = {};
             result.error.issues.forEach((err) => {
-                errors[err.path[0] as string] = err.message;
+                errors[String(err.path[0])] = err.message;
             });
             setFormErrors(errors);
             return;
         }
 
-        // TODO: Call mutation hook here: mutate(result.data)
         setIsLoading(true);
     };
 
