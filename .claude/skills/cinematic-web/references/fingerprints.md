@@ -1,0 +1,8 @@
+# Fingerprints
+
+One row per shipped build. A new build must differ from every row on at least 4 of the 6 dimensions.
+
+| Build                     | Date       | Page shape                                     | Nav                                                        | Hero route           | Scene sequence                                               | Close                                 | Signature move                                                               |
+| ------------------------- | ---------- | ---------------------------------------------- | ---------------------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------------------- | ---------------------------------------------------------------------------- |
+| Tributary (cinematic-lab) | 2026-09-25 | LCP hero + two scroll scenes on one sticky stage | Transparent bar, wordmark + placeholder tag, one quiet CTA | A, raw WebGL2 line field | converge on load (peak, LCP), fan to channels, calm line | Foot-anchored CTAs over the calm line | Strands converge to a white-hot point, then fan into three labelled channels |
+| Halcyon Row (cinematic-lab, real-estate) | 2026-09-25 | Full multi-section enterprise site | Fixed bar, solid on scroll, mobile disclosure menu | B, photographic stills | aperture hero scrub, count band, featured grid, pinned services, horizontal pan, drawn process line, quote carousel | Split valuation form | Arch doorway aperture that widens to full bleed, recurring as the frame for every key image |
