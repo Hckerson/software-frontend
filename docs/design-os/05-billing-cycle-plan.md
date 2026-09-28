@@ -1,7 +1,11 @@
 # Billing Cycle — Implementation Plan
 
 Turns the console from one that _displays_ billing into one that _does_ billing.
-References [Roadmap & QA](04-roadmap-and-qa.md) and [Product Definition](00-product-definition.md).
+Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-8--implementation-roadmap)
+as the work in progress that follows Phase 8 ("next" in the
+[phase map](../MASTER_PROMPT_COMPLETE.md#phase-map)). References
+[Roadmap & QA](04-roadmap-and-qa.md) and [Product Definition](00-product-definition.md). This plan
+is backend and behaviour only; it prescribes no visual design.
 
 Status: **implemented 2026-09-03**. The three dependency-gated items are approved and built —
 see [Previously gated, now approved and built](#previously-gated-now-approved-and-built).
@@ -21,6 +25,21 @@ Two blocking decisions were taken as **stated assumptions** rather than stalling
   later is a thin caller over the same methods.
 
 Reverse either by saying so; neither is baked into a schema.
+
+---
+
+## Contents
+
+- [What the investigation found](#what-the-investigation-found)
+- [Phase A](#phase-a--foundations-no-new-dependencies) ·
+  [Phase B](#phase-b--invoice-generation) · [Phase C](#phase-c--the-scheduler) ·
+  [Phase D](#phase-d--payment-methods) · [Phase E](#phase-e--password-reset) ·
+  [Phase F](#phase-f--verification)
+- [Sequencing](#sequencing) · [Decisions, and how they went](#decisions-and-how-they-went)
+- [Environment note](#environment-note)
+- [Previously gated, now approved and built](#previously-gated-now-approved-and-built)
+- [Verified live — overage billing](#verified-live--overage-billing) ·
+  [Verified live](#verified-live)
 
 ---
 
@@ -212,14 +231,15 @@ only issuance and delivery are missing.
 
 ## Sequencing
 
-```
-A (foundations)  ──▶ B (invoices) ──▶ C (scheduler)
-                          │
-                          └──────────▶ F5 (cycle integration tests)
-D (payment methods)  ─ independent, gated on the Stripe question
-E (password reset)   ─ independent, gated on the email-provider question
-F1–F2 ─ independent, do any time; F1 pays for itself immediately
-```
+| Phase               | Depends on | Notes                                        |
+| ------------------- | ---------- | -------------------------------------------- |
+| A (foundations)     | —          | Critical path                                |
+| B (invoices)        | A          | Critical path                                |
+| C (scheduler)       | B          | Critical path                                |
+| F5 (cycle tests)    | B          |                                              |
+| D (payment methods) | —          | Independent; gated on the Stripe question    |
+| E (password reset)  | —          | Independent; gated on the email provider     |
+| F1–F2               | —          | Independent; F1 pays for itself immediately  |
 
 A → B → C is the critical path and the only sequence with hard ordering. D, E and F1–F2 can
 run in parallel or be dropped without affecting it.
@@ -315,3 +335,9 @@ Against a seeded Postgres and a running API, signed in as the seeded customer on
   token is refused on replay, and login with the new password works.
 - Payment methods: added, listed, exactly one default enforced, `stripeToken` never returned.
 - A non-admin receives 403 from every `/admin/billing/cycle/*` endpoint.
+
+## Changed in the 2026-09-28 regeneration
+
+Nothing in this plan prescribed visual design, and no finding, phase, decision or verification
+was changed. Added a governing link to the brief and a contents list (the file exceeds 250
+lines); the sequencing diagram became a dependency table.

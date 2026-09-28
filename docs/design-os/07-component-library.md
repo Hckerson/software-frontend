@@ -1,64 +1,72 @@
-# Phase 6 — Component Library
+# Phase 6 — Interaction Contracts
 
-References [Phase 4](02-page-blueprints.md) and [Phase 5](06-section-blueprints.md). Governs
-[`components/common/`](../../components/common/),
-[`components/layout/`](../../components/layout/),
-[`components/ui/forms/`](../../components/ui/forms/),
-[`components/providers/`](../../components/providers/) and
-[`components/wrappers/`](../../components/wrappers/).
+> Status: settled · regenerated 2026-09-28 as interaction contracts under the standing brief's
+> [No visual prescription](../MASTER_PROMPT_COMPLETE.md#no-visual-prescription) rule.
+> Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-6--interaction-contracts).
+> The filename predates the phase's rename and is kept as a stable id
+> ([Deviations](../MASTER_PROMPT_COMPLETE.md#deviations-recorded)).
+> References [Phase 4](02-page-blueprints.md) and [Phase 5](06-section-blueprints.md). Governs the
+> behaviour of [`components/common/`](../../components/common/),
+> [`components/layout/`](../../components/layout/),
+> [`components/ui/forms/`](../../components/ui/forms/),
+> [`components/providers/`](../../components/providers/) and
+> [`components/wrappers/`](../../components/wrappers/). Next in phase order:
+> [Phase 7](03-frontend-architecture.md).
 
-**33 components.** Reusable and enterprise-first. **If it is used once, it is a section, not a
-component** — that test is what keeps this library from accumulating page-specific widgets.
+**33 components.** Each contract says how the element behaves — its inputs, states, keyboard and
+ARIA behaviour, validation, loading and error handling, and content rules. **None says how it
+looks.** Which components exist, how they are grouped and how they look is decided when pages are
+built; this inventory is a record of what is built, not a prescription of what must exist.
+
+**If it is used once, it is a section, not a component** — that test is what keeps this library
+from accumulating page-specific widgets.
 
 ---
 
 ## Contents
 
-- [The component contract](#the-component-contract)
-- [Styling approach](#styling-approach)
+- [Contract defaults](#contract-defaults)
 - [`common/` — the library](#common--16-components)
 - [`layout/` — the shell](#layout--6-components)
 - [`ui/forms/` — input primitives](#uiforms--9-primitives)
 - [`providers/` and `wrappers/`](#providers--wrappers--2-components)
 - [Anti-patterns](#anti-patterns)
-- [Compliance statement](#compliance-statement)
+- [Known interaction gaps](#known-interaction-gaps)
+- [Verification](#verification)
+- [Changed in the 2026-09-28 regeneration](#changed-in-the-2026-09-28-regeneration)
 
 ---
 
-## The component contract
+## Contract defaults
 
-Stated once; each blueprint below states only what distinguishes it.
+Stated once; each contract below states only what distinguishes it.
 
-**Composition rules.** One component per file, default export, filename matching the name
-(`starter/one-component-per-file`). Under 150 lines. No comments. **No component fetches
-data** — data arrives as props from a section.
+**Fields.** Every contract answers: Purpose · Inputs · States · Accessibility · Keyboard · ARIA
+· Interaction · Validation · Loading · Error · Content rules · Do · Don't · Dependencies. A field
+not stated takes the default here.
 
-**Props.** Typed with a local `interface Props`. Domain types come from
+**Inputs.** Typed with a local `interface Props`. Domain types come from
 [`lib/types/`](../../lib/types/), which aliases generated contract schemas
-(`starter/domain-types-in-lib`).
+(`starter/domain-types-in-lib`). Inputs that only select an appearance (tone, size, class names)
+exist in code but are not part of any contract.
+
+**Data.** **No component fetches data** — data arrives as inputs from a section. The three
+exceptions are the shell's own reads (`AppShell`, `Topbar`) and are named on their contracts.
 
 **States.** Any component that can render nothing must render a designed nothing. Loading is
-`Skeleton`, never a bare spinner.
+announced to assistive technology.
 
-**Accessibility.** WCAG 2.2 AA. Every interactive element is reachable and labelled;
-`:focus-visible` rings come from tokens; **status is never colour alone.**
+**Accessibility.** WCAG 2.2 AA. Every interactive element is reachable by keyboard, labelled,
+and shows visible focus. **Status is never conveyed by colour alone.** `prefers-reduced-motion`
+is honoured globally.
 
-**Responsive behaviour.** Named in [`styles/components.css`](../../styles/components.css).
-`starter/token-first-classnames` forbids breakpoint chains in JSX — **no component contains a
-`md:` or `lg:`.**
+**Keyboard.** Native elements keep their native keys: a button activates on Enter and Space, a
+link on Enter, a checkbox on Space. A contract states keys only where it adds to that.
 
-**Animation.** Opt-in via `MotionWrapper`; `prefers-reduced-motion` honoured globally.
+**Device needs.** Operable from phone width up with no loss of information or action.
 
----
-
-## Styling approach
-
-**Required on every component, not optional.** Each blueprint names the classes it composes and
-the tokens it consumes, and every one asserts the same thing:
-
-> This component hardcodes no raw values and references tokens and named classes only.
-
-That claim is **machine-checked** by `starter/token-first-classnames`, not reviewed by eye.
+**Composition rules.** One component per file, default export, filename matching the name
+(`starter/one-component-per-file`). Under 150 lines. No comments.
 
 ---
 
@@ -66,113 +74,118 @@ That claim is **machine-checked** by `starter/token-first-classnames`, not revie
 
 ### `Button`
 
-**Purpose:** the primary action affordance. **Variants:** `tone` accent · quiet · ghost;
-`size` sm–xl; `isLoading`. **Props:** extends `ButtonHTMLAttributes`, forwards a ref, defaults
-`type="button"` — so a button inside a form never submits by accident.
-**A11y:** `aria-busy` while loading; disabled during a pending mutation so a destructive action
-cannot be double-fired. **Styling:** `bg-accent`, `.smooth`.
+**Purpose:** the action affordance. **Inputs:** everything `ButtonHTMLAttributes` accepts, plus
+`isLoading`; forwards a ref. **Interaction:** defaults `type="button"`, so a button inside a form
+never submits by accident. **Loading:** while `isLoading`, the button is disabled and carries
+`aria-busy`, so a pending mutation — a destructive one included — cannot be double-fired.
 **Don't:** use it for navigation — that is `LinkButton`.
 
 ### `LinkButton`
 
-**Purpose:** navigation that looks like an action. **Props:** `href`, `size`, `tone`,
-`className`. **Styling:** shares `BUTTON_SIZES` / `BUTTON_TONES` with `Button` so the two can
-never drift apart — the single source of truth rule applied to a variant map.
-**Do:** use for `/plans` and `/dashboard` affordances in empty states. **Don't:** attach
+**Purpose:** navigation presented as an action. **Inputs:** `href`, `children`. Renders a real
+link (`next/link`), so it is announced as a link, activates on Enter and can be opened in a
+new tab.
+**Do:** use for the `/plans` and `/dashboard` actions in empty states. **Don't:** attach
 `onClick` handlers that mutate.
 
 ### `PageHeader`
 
-**Purpose:** the title block every route opens with. **Props:** `title`, `description`,
-`actions` slot. **Styling:** `text-h4` — **the console's largest type.** A page title above
-`text-h4` fires `starter/application-register-density`; this component is where that ceiling is
-enforced in practice. Renders `<h1>`, so each route has exactly one.
+**Purpose:** the title every route opens with. **Inputs:** `title`, `description`, `actions`.
+**ARIA:** renders the page's `<h1>`, so each route has exactly one.
 
 ### `SectionCard`
 
-**Purpose:** the titled panel every section renders inside. **Props:** `title`, `description`,
-`action` slot, `bodyless`, `className`. **Styling:** `.section-card`.
-**Notes:** `bodyless` exists for panels wrapping a full-bleed table, so the card frame does not
-double-pad a `DataTable`.
+**Purpose:** the titled region a section's content belongs to. **Inputs:** `title?`,
+`description?`, `action?`, `children`. **ARIA:** a `<section>`; the title is an `<h2>`, so
+sections sit one level under the page title.
 
 ### `StatCard`
 
-**Purpose:** one counter. **Variants:** `tone` pipeline · success · activity · warning.
-**Props:** `label`, `value`, `meta`, `icon`, `tone`.
-**Styling:** `.stat-card`, `.stat-card--<tone>`, `.metric-*`.
-**Notes:** the seven `--stat-card-*` tokens **alias** `--colors-*` / `--paddings-*` /
-`--radii-*` / `--shadows-*` rather than holding raw values. That aliasing is what makes the dark
-theme possible at all — [a component token holding its own raw value is a theme
-leak](03-frontend-architecture.md).
+**Purpose:** one counter. **Inputs:** `label`, `value`, `meta?`, `icon?` (decorative).
+**Content rule:** `value` arrives pre-formatted as a string; zero is a value, never an empty
+state. **Don't:** let the counter's meaning depend on anything but its words.
 
 ### `UsageMeter` — the hero interaction
 
-**Purpose:** quota consumed against the plan limit. Design principle 1 made concrete.
-**Props:** `label`, `unit`, `consumed`, `limit: number | null`, `icon`.
-**Variants:** state derived from ratio — **under 75 % neutral · 75–99 % warning · ≥ 100 % error**
-with an upgrade affordance inline.
-**A11y (required):** `role="progressbar"` with `aria-valuenow` / `aria-valuemin` /
-`aria-valuemax`, plus `aria-label`.
+**Purpose:** quota consumed against the plan limit. Principle 1 made concrete.
+**Inputs:** `label`, `unit`, `consumed`, `limit: number | null`, `icon?` (decorative).
+**States:** derived from the ratio against [`USAGE_THRESHOLD`](../../lib/constants.ts) —
+**normal** under 75 %, **warning** 75–99 %, **exceeded** at or over 100 %. **`limit: null` means
+unlimited**, stated as _"No limit on this plan"_ — never as zero, which would read as a full meter
+for the least constrained plan.
+**Content rules:** states consumed against limit with the unit, and the percentage of the
+allowance used, in words. **Exceeded offers the upgrade path to `/plans`** — _requirement, not yet
+built_ ([gaps](#known-interaction-gaps)).
+**ARIA (required):** `role="progressbar"` with `aria-label`, `aria-valuenow`, `aria-valuemin` and
+`aria-valuemax`.
 
-> **`aria-valuenow` is clamped to the track maximum.** An over-limit meter previously reported
+> **`aria-valuenow` is clamped to the maximum.** An over-limit meter previously reported
 > `aria-valuenow="250"` against `aria-valuemax="100"` — invalid ARIA. The visible text still
 > states the true percentage. Found by writing the component test, not by reading the code;
 > asserted in [`usage-meter.test.tsx`](../../components/common/usage-meter.test.tsx) so it
 > cannot regress.
 
-**`limit: null` means unlimited**, rendered as _"No limit on this plan"_ — never as zero, which
-would show a full meter for the least constrained plan.
-
 ### `StatusPill`
 
-**Purpose:** subscription, invoice and account state as a **word**. Design principle 2.
-**Props:** `status: string`, `className`. **Variants:** tone map success · warning · error ·
-info · neutral. **Styling:** `.status-pill`, `.status-pill--<tone>`.
-**Don't:** ever convey status by colour alone — the word is the payload, the tone is decoration.
+**Purpose:** subscription, invoice and account state as a **word**. Principle 2.
+**Inputs:** `status: string`. **Content rule:** renders the backend's status in title case —
+Draft, Sent, Paid, Failed, Overdue for invoices.
+**Don't:** ever convey status by anything but the word; any other signal is supplementary.
 
 ### `DataTable`
 
-**Purpose:** row collections. **Props:** generic `<T>` — `columns: Column<T>[]`, `rows`,
-`rowKey: (row) => string`, `onRowClick?`. **Styling:** `.data-table*`, `.table-scroll`.
-**Responsive:** scrolls inside `.table-scroll`; **the page never scrolls horizontally.**
-**Notes:** `rowKey` is required rather than defaulting to an index, so a re-sorted table cannot
-scramble row identity.
+**Purpose:** row collections. **Inputs:** generic `<T>` — `columns: Column<T>[]`, `rows`,
+`rowKey: (row) => string`, `onRowClick?`.
+**ARIA:** a real `<table>` with `<th scope="col">` headers. **Device needs:** every column stays
+reachable at narrow widths; the page itself never scrolls sideways.
+**Interaction:** `rowKey` is required rather than defaulting to an index, so a re-sorted table
+cannot scramble row identity.
+**Known gap:** `onRowClick` is a pointer-only handler on the row — no focus, no Enter. A row
+that navigates must also be reachable by keyboard ([gaps](#known-interaction-gaps)).
 
 ### `DetailRow`
 
-**Purpose:** one label/value pair. **Props:** `label`, `children`.
-**Notes:** renders `<dt>`/`<dd>`, so callers must place it inside a `<dl>` — the semantics are
-the point, not the layout.
+**Purpose:** one label/value pair. **Inputs:** `label`, `children`.
+**ARIA:** renders `<dt>`/`<dd>`, so callers must place it inside a `<dl>` — the semantics are
+the point.
 
 ### `EmptyState`
 
-**Purpose:** the designed empty. Design principle 5. **Props:** `title`, `description?`,
-`icon?`, `action?`. **Styling:** `.empty-state`.
+**Purpose:** the designed empty. Principle 5. **Inputs:** `title`, `description?`, `icon?`
+(decorative), `action?`.
 **Content rule:** carry **the one action that resolves the emptiness** — the unsubscribed
-dashboard's _Choose a plan_ is the canonical example.
+dashboard's _Choose a plan_ is the canonical example. Say what is missing and why, never just
+"No data".
 
 ### `ErrorState`
 
-**Purpose:** the designed failure. **Props:** `error: unknown`, `onRetry?`.
-**A11y:** `role="alert"`. **Styling:** `.empty-state` — shares the frame deliberately.
-**Notes:** narrows `ApiError` → `Error` → a fallback message, so a thrown non-`Error` still
-renders something a human can read. **Takes `unknown`** because that is what a `catch` and a
-React Query `error` actually give you; a component demanding `Error` pushes casts to callers.
+**Purpose:** the designed failure. **Inputs:** `error: unknown`, `onRetry?`.
+**ARIA:** `role="alert"`, so the failure is announced when it appears.
+**Content rules:** a fixed heading (_"We could not load this"_), then the message — narrowed
+`ApiError` → `Error` → a fallback, so a thrown non-`Error` still yields something a human can
+read. With `onRetry`, a _Try again_ action.
+**Notes:** takes `unknown` because that is what a `catch` and a React Query `error` give you; a
+component demanding `Error` pushes casts to callers.
 
 ### `Skeleton`
 
-**Purpose:** loading. **Props:** `lines`, `className`. **A11y:** `aria-busy="true"`,
-`aria-live="polite"`. **Styling:** `.skeleton`.
+**Purpose:** loading. **Inputs:** `lines?`. **ARIA:** `aria-busy="true"`,
+`aria-live="polite"`.
 
 ### `ConfirmDialog`
 
-**Purpose:** guard destructive actions. Design principle 3.
-**Props:** `open`, `title`, `description`, `confirmLabel`, `isPending?`, `onConfirm`,
-`onCancel`. **A11y:** `role="dialog"`, `aria-modal`, `aria-label`; **closes on Escape and
-restores focus to the trigger.** **Styling:** `.dialog*`, `--z-modal`.
-**Content rule:** `confirmLabel` names the act (_Cancel subscription_), never _OK_.
+**Purpose:** guard destructive actions. Principle 3.
+**Inputs:** `open`, `title`, `description`, `confirmLabel`, `isPending?`, `onConfirm`,
+`onCancel`.
+**ARIA:** `role="dialog"`, `aria-modal="true"`, `aria-label` from the title.
+**Keyboard & focus:** on open, focus moves to the confirm action; **Escape cancels**; on close,
+**focus returns to the trigger**.
+**Loading:** while `isPending`, confirm shows loading and _Cancel_ is disabled, so the pending
+act can neither be doubled nor abandoned half-way.
+**Content rule:** `confirmLabel` names the act (_Cancel subscription_), never _OK_; the
+description states the consequence, including whether it is reversible.
 **Guards:** cancel, reactivate, plan change, plan deactivate, plan delete, payment-method
-removal.
+removal, account suspend/restore, cycle runs, invoice issue.
 
 > **Focus restore was claimed before it was true.** The dialog moved focus in but never back,
 > and because `onCancel` sat in the effect's dependencies, a parent re-render with an inline
@@ -183,28 +196,31 @@ removal.
 
 ### `Money`
 
-**Purpose:** every amount in the product. Design principle 2.
-**Props:** `amount: string | number | null | undefined`, `showCurrency?`, `className`.
-**Styling:** `font-mono`, `whitespace-nowrap` — figures align in a column and never wrap
-mid-amount.
+**Purpose:** every amount in the product. Principle 2.
+**Inputs:** `amount: string | number | null | undefined`, `showCurrency?`.
+**Content rule:** the currency is `USD` (`DEFAULT_CURRENCY`); `showCurrency` appends the code
+where the context does not already state it.
 **Notes:** `Decimal` arrives over JSON as `string` and stays a string until here. **This
 component is the parsing boundary** — its existence is what keeps `Number()` out of sections.
 Accepts `null`/`undefined` so callers never branch before rendering.
 
 ### `PeriodRange`
 
-**Purpose:** a billing period with **both endpoints**. Design principle 2.
-**Props:** `start`, `end` (nullable). **Notes:** exists so no section formats a period by hand;
-a period rendered as one date is ambiguous about which end it is.
+**Purpose:** a billing period with **both endpoints**. Principle 2.
+**Inputs:** `start`, `end` (nullable). **Content rule:** always `start – end`; exists so no
+section formats a period by hand, because a period stated as one date is ambiguous about which
+end it is.
 
 ### `FormField`
 
-**Purpose:** a labelled, validated text input. **Props:** `label`, `value`, `onChange(value)`,
-`type`, `placeholder`, `error`, `required`, `autoComplete`.
-**A11y:** `aria-invalid` and `aria-describedby` wired to the error text — **the error is
-announced, not merely coloured.**
-**Notes:** the controlled input used by every auth and settings form. `onChange` hands back the
-**value**, not the event, so sections never touch `event.target`.
+**Purpose:** a labelled, validated text input. **Inputs:** `label`, `value`,
+`onChange(value)`, `type`, `placeholder`, `error`, `required`, `autoComplete`.
+**ARIA:** a real `<label>` bound by id; `aria-invalid` and `aria-describedby` wired to the error
+text — **the error is announced, not merely coloured.**
+**Validation:** the field presents a message; it does not validate. The auth forms derive
+theirs from Zod schemas in [`lib/validations/`](../../lib/validations/).
+**Interaction:** controlled. `onChange` hands back the **value**, not the event, so sections
+never touch `event.target`. **Don't:** rely on `placeholder` as the label.
 
 ---
 
@@ -212,49 +228,54 @@ announced, not merely coloured.**
 
 ### `AppShell`
 
-**Purpose:** the authenticated frame — sidebar, topbar, content. **Props:** none; reads
-`GET /users/me` for `role`.
+**Purpose:** the authenticated frame — navigation, account bar, content. **Inputs:** `children`;
+reads `GET /users/me` for `role`. **Loading:** while the user is pending, a loading state stands
+in for the whole frame.
 **Critical:** `role` decides **only whether the admin nav group renders. It never authorises.**
-Authorisation is [`proxy.ts`](../../proxy.ts) plus the backend's `RolesGuard`. Hiding
-a link is navigation, not security.
-**Styling:** `.app-shell` — and its responsive collapse is named there, not inlined.
+Authorisation is [`proxy.ts`](../../proxy.ts) plus the backend's `RolesGuard`. Hiding a link is
+navigation, not security.
 
 ### `Sidebar` / `SidebarGroup`
 
-**`Sidebar`** — **Props:** `isAdmin`. Filters `NAV_GROUPS` from
+**`Sidebar`** — **Inputs:** `isAdmin`. Filters `NAV_GROUPS` from
 [`lib/data/navigation.ts`](../../lib/data/navigation.ts). Adding a route means editing that file,
 the sitemap and the permission table in the same change.
-**`SidebarGroup`** — **Props:** `label`, `items`. **A11y:** `<nav aria-label>` per group and
-**`aria-current` on the active item**; active matches the path or any descendant, so
-`/invoices/[id]` keeps `/invoices` lit.
+**`SidebarGroup`** — **Inputs:** `label`, `items`. **ARIA:** a `<nav aria-label>` per group and
+**`aria-current="page"` on the current item**. **Interaction:** the current item is the
+**longest** href that matches the path, so `/invoices/[id]` keeps Invoices current and `/admin`
+no longer shadows every admin page.
 
 ### `Topbar` · `ThemeToggle` · `AuthCard`
 
-**`Topbar`** — page context and account actions, including sign-out via `POST /auth/logout`
-(the server clears the cookie; the client cannot).
-**`ThemeToggle`** — toggles `.dark` on the root. **A11y:** `aria-label`. Swaps the token layer
-only; no component knows which theme is active.
-**`AuthCard`** — **Props:** `title`, `description`, `children`. The unauthenticated frame;
+**`Topbar`** — the signed-in account's name and email, and account actions. Reads
+`useCurrentUser`, stating _"Loading account"_ until it resolves. **Sign out** calls
+`POST /auth/logout` (the server clears the cookie; the client cannot), shows loading while
+pending, and replaces the route with login when it settles — success or failure.
+**`ThemeToggle`** — switches the theme preference between light and dark. **Default:** the stored
+preference, else the operating system's. **Persistence:** `localStorage` — the only thing the app
+keeps there. **ARIA:** `aria-label` names the action it will take (_Switch to dark theme_), not
+the current state. What each theme looks like is not specified here.
+**`AuthCard`** — **Inputs:** `title`, `description`, `children`. The unauthenticated frame;
 renders the `<h1>` for auth routes so the forms inside carry none.
 
 ---
 
 ## `ui/forms/` — 9 primitives
 
-Lower-level than `FormField`: unlabelled-by-default building blocks for composed forms. They
-share a `handleChange` convention rather than raw DOM events.
+Lower-level than `FormField`: building blocks for composed forms. They share a `handleChange`
+convention rather than raw DOM events.
 
-| Primitive       | Props                                              | Notes                                       |
-| --------------- | -------------------------------------------------- | ------------------------------------------- |
-| `InputTemplate` | `label`, `icon?`, `rightSection?`, `children`      | The frame the others render inside          |
-| `TextInput`     | `label`, `value`, `handleChange(event)`            | Ids and names derive from `label`           |
-| `TextAreaInput` | `rows`, `label`, `value`, `handleChange(event)`    | Explicit `rows`; no autosize                |
-| `SelectInput`   | `label`, `data: Option[]`, `value`, `handleChange` | Options from [`lib/data/`](../../lib/data/) |
-| `CheckBoxInput` | `label`, `value`, `values`, `handleChange`         | Generic `<T extends string>`                |
-| `PickInput`     | `label`, `value`, `values`, `handleChange`         | Single-choice sibling of `CheckBoxInput`    |
-| `ToggleInput`   | `label?`, `value?`, `handleChange?`                | Controlled **or** uncontrolled              |
-| `CalendarInput` | `value: Date`, `name?`, `handleChange`             | Guards `isValid` before formatting          |
-| `FileInput`     | `name?`, `label?`                                  | Dashed drop affordance; `focus-within` ring |
+| Primitive       | Inputs                                             | Behaviour                                                                                          |
+| --------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `InputTemplate` | `label`, `icon?`, `rightSection?`, `children`      | Shared label and adornment wrapper the others render inside                                        |
+| `TextInput`     | `label`, `value`, `handleChange(event)`            | Ids and names derive from `label`                                                                  |
+| `TextAreaInput` | `rows`, `label`, `value`, `handleChange(event)`    | Multi-line text                                                                                    |
+| `SelectInput`   | `label`, `data: Option[]`, `value`, `handleChange` | Button with `aria-haspopup="listbox"` / `aria-expanded`; options `role="option"` + `aria-selected`; prepends an **All** option; closes on Escape or outside click. Options from [`lib/data/`](../../lib/data/) |
+| `CheckBoxInput` | `label`, `value`, `values`, `handleChange`         | Native checkboxes; generic `<T extends string>`                                                    |
+| `PickInput`     | `label`, `value`, `values`, `handleChange`         | Single-choice sibling of `CheckBoxInput`                                                           |
+| `ToggleInput`   | `label?`, `value?`, `handleChange?`                | Native checkbox; controlled **or** uncontrolled                                                    |
+| `CalendarInput` | `value: Date`, `name?`, `handleChange`             | Guards `isValid` before formatting, so an invalid date never throws                                |
+| `FileInput`     | `name?`, `label?`                                  | Native file input bound to its label; keyboard-reachable                                           |
 
 **Known inconsistency, recorded not hidden.** These take `handleChange` and mostly hand back
 events, while `FormField` takes `onChange` and hands back a **value**. Two conventions for one
@@ -270,9 +291,10 @@ and these are for composed cases it cannot express.
 the root layout. **There is no session provider and no store**, because the JWT is an httpOnly
 cookie the client cannot read.
 
-**`MotionWrapper`** — **Props:** `delay`, `duration`, `yOffset`, `xOffset`, `scale`,
-`className`. The **only** animation entry point; conventions in [MOTION.md](../MOTION.md).
-Durations come from `MOTION_DURATION` tokens, never inline numbers.
+**`MotionWrapper`** — the **only** animation entry point. **Behaviour:** reveals its children
+once, when they enter the viewport. `prefers-reduced-motion` is honoured globally. How
+anything moves is a build decision; code conventions live in [MOTION.md](../MOTION.md), which
+this design OS does not govern.
 
 ---
 
@@ -280,35 +302,71 @@ Durations come from `MOTION_DURATION` tokens, never inline numbers.
 
 Enforced by lint rather than convention — each maps to a rule that fires:
 
-| Anti-pattern                                    | Rule                                   |
-| ----------------------------------------------- | -------------------------------------- |
-| A raw value in a component (`#1f4e3d`, `13px`)  | `starter/token-first-classnames`       |
-| An arbitrary Tailwind value (`bg-[#1f4e3d]`)    | `starter/token-first-classnames`       |
-| The same utility chain inlined twice            | `starter/token-first-classnames`       |
-| A `md:` / `lg:` chain in JSX                    | `starter/token-first-classnames`       |
-| A component defined inside a route file         | `starter/page-composes-only`           |
-| Calling the transport outside `lib/hooks/use-*` | `starter/api-access-boundary`          |
-| A shared type declared outside `lib/types`      | `starter/domain-types-in-lib`          |
-| Two components in one file                      | `starter/one-component-per-file`       |
-| A page title larger than `text-h4`              | `starter/application-register-density` |
-| A comment explaining TSX                        | `starter/no-comments`                  |
-| A file over 150 lines                           | `max-lines`                            |
+| Anti-pattern                                    | Rule                             |
+| ----------------------------------------------- | -------------------------------- |
+| A component defined inside a route file         | `starter/page-composes-only`     |
+| Calling the transport outside `lib/hooks/use-*` | `starter/api-access-boundary`    |
+| A shared type declared outside `lib/types`      | `starter/domain-types-in-lib`    |
+| Two components in one file                      | `starter/one-component-per-file` |
+| A comment explaining TSX                        | `starter/no-comments`            |
+| A file over 150 lines                           | `max-lines`                      |
 
-**A variant that re-declares a raw value instead of selecting a token** is the subtlest of these
-and the one most worth watching, because it passes review by looking like configuration.
+Behavioural anti-patterns that no rule catches: a destructive action without `ConfirmDialog`;
+an amount or period formatted by hand instead of through `Money` / `PeriodRange`; a status
+signalled without its word; a failed read rendered as an empty state.
+
+The two rules that govern how styles are written are code conventions, not part of these
+contracts — see [Frontend Architecture](03-frontend-architecture.md#rules-outside-this-design-os).
 
 ---
 
-## Compliance statement
+## Known interaction gaps
 
-Every component above **hardcodes no raw values and references tokens and named classes only.**
+Found while regenerating these contracts against the code. Recorded, not fixed — this pass edits
+documents only.
 
-Recurring combinations used by more than one component — the card frame, the table frame, the
-meter track, the pill, the dialog — are declared once in
-[`styles/components.css`](../../styles/components.css), and the responsive collapse of the
-shell, meter row, plan grid and tables is named there too rather than inlined at call sites.
+1. **Invoice rows are pointer-only.** `DataTable`'s `onRowClick` sits on the row with no focus
+   or key handling, and `invoice-table` uses it as the only route to `/invoices/[id]`. A keyboard
+   user cannot open an invoice from the list.
+2. **`ConfirmDialog` does not trap focus.** It declares `aria-modal` and handles Escape, but Tab
+   can leave the dialog for the page behind it.
+3. **`SelectInput` has no arrow-key navigation.** Options are reachable with Tab; the listbox
+   pattern also expects ↑/↓, Home and End.
+4. **`UsageMeter` does not yet offer the upgrade path when exceeded**
+   ([E2](01-information-architecture.md#e2--monitor-usage-customer-recurring--the-core-loop)).
 
-Four components carrying a design principle are **asserted by tests rather than claimed**:
-`UsageMeter`, `Money`, `StatusPill` and `ConfirmDialog`. The remainder are covered by lint. The
-gap between those two — behaviour that neither lint nor a unit test can see — is what
-[E2E would close](04-roadmap-and-qa.md#known-gaps-ranked).
+---
+
+## Verification
+
+Four components carrying a product principle are **asserted by tests rather than claimed**:
+`UsageMeter`, `Money`, `StatusPill` and `ConfirmDialog`. The layering is covered by lint. The
+gap between those two — behaviour that neither lint nor a unit test can see — is what the
+Playwright suite exercises ([QA](04-roadmap-and-qa.md#qa-checklist)).
+
+---
+
+## Changed in the 2026-09-28 regeneration
+
+The document was converted from a component library to interaction contracts. Every component
+survives. Dropped as visual prescription:
+
+- The **Styling approach** section and the **Compliance statement** ("hardcodes no raw values and
+  references tokens and named classes only").
+- Visual variants and their rationale: `Button`/`LinkButton` `tone` (accent · quiet · ghost) and
+  `size` (sm–xl) and the shared variant map; `StatCard` `tone` and the `--stat-card-*` token
+  aliasing; `StatusPill`'s tone map; `SectionCard`'s `bodyless` padding variant;
+  `TextAreaInput`'s "no autosize"; `FileInput`'s dashed drop affordance.
+- Type and styling specifics: `PageHeader` as "`text-h4`, the console's largest type"; `Money`
+  as `font-mono` / `whitespace-nowrap`; every "Styling: `.class`" line; `ThemeToggle` "toggles
+  `.dark` and swaps the token layer"; focus rings "from tokens".
+- Placement and responsive specifics: `DataTable` scrolling "inside `.table-scroll`";
+  `AppShell`'s collapse "named in `.app-shell`"; the "no `md:`/`lg:` in components" rule.
+- `MotionWrapper`'s animation parameters (`delay`, `duration`, `yOffset`, `xOffset`, `scale`)
+  and "durations from `MOTION_DURATION` tokens".
+- Anti-pattern rows for `starter/token-first-classnames` (raw values, arbitrary values, repeated
+  utility chains, breakpoint chains) and `starter/application-register-density` (page title
+  above `text-h4`).
+
+Corrected against the code: `SidebarGroup` matches the **longest** href, not "the path or any
+descendant"; `ConfirmDialog`'s guard list now includes the admin actions added since.

@@ -1,6 +1,29 @@
-# Phases 9–10 — Roadmap & Quality
+# Phases 8–9 — Roadmap & Quality
 
-References [Phases 7–8](03-frontend-architecture.md).
+> Status: settled · regenerated 2026-09-28 under the standing brief's
+> [No visual prescription](../MASTER_PROMPT_COMPLETE.md#no-visual-prescription) rule.
+> Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-8--implementation-roadmap)
+> and its [Phase 9](../MASTER_PROMPT_COMPLETE.md#phase-9--quality-assurance). References
+> [Phase 7](03-frontend-architecture.md). The next body of work is the
+> [billing cycle plan](05-billing-cycle-plan.md); navigation is in the [README](README.md).
+
+QA here is functional. Visual quality is judged when each page is built, with the owner.
+
+---
+
+## Contents
+
+- [Delivered in this pass](#delivered-in-this-pass)
+- [Closed in this pass](#closed-in-this-pass) · [Closed in the deferred pass](#closed-in-the-deferred-pass)
+- [Found in the deferred pass](#found-in-the-deferred-pass)
+- [Known gaps, ranked](#known-gaps-ranked)
+- [Found by the new tests](#found-by-the-new-tests) ·
+  [Found by actually running it](#found-by-actually-running-it) ·
+  [Incidental fixes](#incidental-fixes-made-along-the-way)
+- [QA checklist](#qa-checklist)
+- [Deviation from the master prompt](#deviation-from-the-master-prompt)
+
+---
 
 ## Delivered in this pass
 
@@ -14,6 +37,15 @@ References [Phases 7–8](03-frontend-architecture.md).
 | 6     | Auth moved to an httpOnly cookie; `proxy.ts` enforces routes and admin access server-side                |
 | 7     | RS256 keypair signing; the proxy verifies signatures with WebCrypto, no shared secret                    |
 | 8     | Response schemas on all 49 backend operations; frontend types generated end to end; Vitest renders React |
+
+Stage 1's token deduplication and dark theme are **delivered history, not visual requirements**
+([detail](03-frontend-architecture.md#delivered-history--not-a-requirement)). Meter records
+delivered stages rather than an estimated week count, because the stages are verifiable after the
+fact and the weeks were never measured.
+
+**Technical debt prevention** is structural rather than scheduled: the lint rules, the 150-line
+ceiling and the generated contract each remove a class of drift that would otherwise need a
+cleanup sprint.
 
 ## Closed in this pass
 
@@ -60,8 +92,8 @@ The three dependency-gated gaps were approved and are now implemented.
    `issue-invoice`. Compared in constant time over SHA-256 digests; fails closed when unset or
    shorter than 32 characters; a request that offers a wrong token is refused outright rather
    than falling back to a session.
-7. **Usage history is charted.** Small multiples in inline SVG, one per metric on its own scale,
-   against the plan limit, with the table kept as a disclosure. No charting library: three
+7. **Usage history is charted.** One chart per metric on its own scale, against the plan limit,
+   with the table kept as a disclosure so every value is also text. No charting library: three
    single-series charts did not justify the dependency.
 
 ## Found in the deferred pass
@@ -82,13 +114,15 @@ The three dependency-gated gaps were approved and are now implemented.
 - **The `/usage` blueprint and billing plan F2 described an endpoint that no longer existed** —
   a three-shape union normalised in `lib/utils/usage.ts`. It returns one shape and the
   normaliser is gone; both documents now say so.
-- **The brand accent fails as a data colour.** `#1f4e3d` is too dark (OKLCH L 0.386) and too
-  grey (C 0.06) to read as a mark. `--colors-chart-series` is the nearest step of the same hue
+- _Delivered history, not a requirement — how charts look is a build decision._ **The brand
+  accent failed as a data colour.** `#1f4e3d` was too dark (OKLCH L 0.386) and too
+  grey (C 0.06) to read as a mark. `--colors-chart-series` was set to the nearest step of the same hue
   that passes lightness, chroma, and contrast against the card in each theme, found by search
   and checked by the dataviz validator rather than by eye: `#027254` light, `#449e7d` dark.
 - **Rendering the chart caught a label collision the tests could not.** "Limit 500K" sat on
-  the latest value label, and in any month billed for overage it would have sat on the column
-  itself. Placement is now measured on both sides, with the label dropped when neither is clear.
+  the latest value label, and in any month billed for overage it would have sat on the data
+  itself. The label is now dropped whenever it would obscure a value; the caption states the
+  limit either way. (The placement mechanics are history, not a requirement.)
 
 ## Known gaps, ranked
 
@@ -102,6 +136,16 @@ The three dependency-gated gaps were approved and are now implemented.
 3. **The customer list is unpaginated.** `GET /users` returns every account and the table
    filters client-side, which is right at this scale and wrong at tens of thousands. Paging
    belongs on the endpoint, not in the component.
+4. **Invoice rows are pointer-only.** `DataTable` opens a row on click with no focus or key
+   handling, and it is the list's only route to `/invoices/[id]` — a keyboard user cannot open
+   an invoice. Found while regenerating the
+   [interaction contracts](07-component-library.md#known-interaction-gaps).
+5. **`ConfirmDialog` does not trap focus.** Escape and focus restore are asserted; Tab can still
+   leave the dialog.
+6. **`SelectInput` lacks arrow-key navigation** expected of a listbox.
+7. **An exceeded meter does not offer the upgrade path** that
+   [E2](01-information-architecture.md#e2--monitor-usage-customer-recurring--the-core-loop)
+   specifies.
 
 ## Found by the new tests
 
@@ -179,14 +223,18 @@ first time a real request hit a real database.
 
 ## QA checklist
 
-**Design system** — no raw values in components · no arbitrary Tailwind values · no repeated
-utility chain · variants select tokens/named classes · look-alike components share a class.
-All five are lint-enforced rather than reviewed by eye.
+**Behavioural consistency** — the same action works the same way everywhere: every destructive
+action confirms through `ConfirmDialog`; every amount goes through `Money` and every period
+through `PeriodRange`; shared descriptions (`subscription-facts`, `invoice-table`,
+`plan-feature-list`, `plan-metric-fields`) stay pure so two surfaces cannot disagree. The
+layering is lint-enforced rather than reviewed by eye. How styles are written is checked by the
+code's own style rules, which are outside this checklist.
 
-**Accessibility** — every input labelled · `:focus-visible` rings from tokens · meters carry
-`role="progressbar"` with `aria-valuenow/min/max` · dialogs close on Escape and restore focus
-to the trigger · status is never colour-only, always a word · `prefers-reduced-motion`
-honoured globally in `globals.css`.
+**Accessibility** — every input labelled · every interactive element shows visible focus ·
+meters carry `role="progressbar"` with `aria-valuenow/min/max` · dialogs close on Escape and
+restore focus to the trigger · status is never colour-only, always a word ·
+`prefers-reduced-motion` honoured globally. Open items are ranked in
+[known gaps](#known-gaps-ranked) (4–7).
 
 The meter and dialog halves of that list are now asserted by component tests rather than
 claimed. Writing them found one real defect: an over-limit meter reported
@@ -196,9 +244,9 @@ clamped to the track maximum while the visible text still states the true percen
 **States** — every data surface has loading, empty, error, and success. Verified per page in
 [the blueprints](02-page-blueprints.md#the-page-contract).
 
-**Responsive** — no inline responsive chains anywhere; the shell, meter row, plan grid, and
-tables collapse via named classes in `components.css`, so breakpoint behaviour is auditable in
-one file.
+**Responsive** — every customer and admin surface stays fully operable from phone width up:
+the shell, the meters, the plan catalogue and the tables lose no information and no action on a
+small screen. How each adapts is a build decision.
 
 **Verification gates** — green on **both** sides, which was not previously true: the backend's
 `pnpm lint` exited 1 while this checklist claimed otherwise.
@@ -219,21 +267,32 @@ the development database.
 
 ## Deviation from the master prompt
 
-The **portable template** this project was generated from specified 16 files — 10 phase files
-plus 6 Phase-11 ancillary documents. `docs/design-os/` holds 9.
+The **portable template** this project was generated from specified 15 files — 9 phase files
+plus 6 Phase-10 ancillary documents. `docs/design-os/` holds 9.
 
-Seven documents here carry Phases 1–10; [README](README.md) carries Phase 11; and
-[05](05-billing-cycle-plan.md) is work in progress that is not yet a phase. The six Phase-11 ancillary
+Seven documents here carry Phases 1–9; [README](README.md) carries Phase 10; and
+[05](05-billing-cycle-plan.md) is work in progress that is not yet a phase. The six Phase-10 ancillary
 documents (START_HERE, README, DESIGN-OS-COMPLETE, ARTIFACT_INDEX, SETUP-CHECKLIST,
-IMPLEMENTATION_PROMPT) are navigation and index layers over a 16-file set. Nine files do not
+IMPLEMENTATION_PROMPT) are navigation and index layers over a 15-file set. Nine files do not
 need an index, a start-here, and a separate artifact index — that scaffolding would be longer
 than the thing it indexes, and every line of it is a line that can drift out of sync with the
 code. The content those files would carry lives in [README](README.md) and in this document.
 
 [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md) now records this as a resolved
 deviation rather than an outstanding requirement: it retains all six ancillary specifications
-under [Phase 11](../MASTER_PROMPT_COMPLETE.md#phase-11--ancillary-documentation--navigation),
+under [Phase 10](../MASTER_PROMPT_COMPLETE.md#phase-10--ancillary-documentation--navigation),
 each marked superseded with where its content actually went. **If this directory ever exceeds
 roughly twelve documents, the arithmetic stops holding — revisit the decision then.**
 
 Recorded here rather than silently omitted, so the deviation is a decision and not a gap.
+
+## Changed in the 2026-09-28 regeneration
+
+Headings renumbered to the brief's phase map (this is Phases 8–9, not 9–10). The QA checklist's
+"Design system" line (no raw values, no arbitrary Tailwind values, no repeated utility chains,
+variants select tokens) was dropped as visual — those checks belong to the code's style rules —
+and replaced by the brief's _behavioural consistency_ check. Focus "rings from tokens" became
+visible focus; responsive "named classes in `components.css`" became the operability
+requirement. The chart-colour and label-placement findings are kept as delivered history. Known
+gaps 4–7 were added from the regenerated
+[interaction contracts](07-component-library.md#known-interaction-gaps).

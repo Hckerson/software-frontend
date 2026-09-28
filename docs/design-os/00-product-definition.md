@@ -1,8 +1,11 @@
 # Phase 1 — Product Definition
 
-> Status: settled 2026-08-27. This document fills the placeholder glossary in
-> [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md). Every downstream phase
-> references it. Nothing in this repo may re-derive these values.
+> Status: settled 2026-08-27 · regenerated 2026-09-28 under the standing brief's
+> [No visual prescription](../MASTER_PROMPT_COMPLETE.md#no-visual-prescription) rule.
+> Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-1--product-vision).
+> This document resolves the template's placeholder glossary; every downstream phase references
+> it, and nothing in this repo may re-derive these values. Next in phase order:
+> [Phases 2–3](01-information-architecture.md).
 
 ## Placeholder glossary (resolved)
 
@@ -10,7 +13,7 @@
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `{{PRODUCT_NAME}}`                           | Meter                                                                                              |
 | `{{DOMAIN}}`                                 | Subscription billing & usage metering (B2B SaaS)                                                   |
-| `{{REFERENCE_PRODUCTS}}`                     | Stripe Billing, Chargebee, Paddle, Orb                                                             |
+| `{{REFERENCE_PRODUCTS}}`                     | Stripe Billing, Chargebee, Paddle, Orb — benchmarks for features and flows only, never look or feel |
 | `{{PERSONAS}}`                               | Customer, Billing Admin, Internal Ops                                                              |
 | `{{CORE_ENTITY}}` / `{{CORE_ENTITY_PLURAL}}` | Subscription / Subscriptions                                                                       |
 | `{{PRIMARY_FLOWS}}`                          | Select a plan · Monitor usage against limits · Pay and retrieve invoices · Change or cancel a plan |
@@ -18,9 +21,11 @@
 | `{{ROLE_DASHBOARDS}}`                        | Customer dashboard, Admin console                                                                  |
 | `{{DOMAIN_TRANSACTION}}`                     | Plan selection / plan change (the billing-state mutation)                                          |
 | `{{DOMAIN_TOOL}}`                            | Usage meter — quota consumed vs. plan limit                                                        |
-| `{{DOMAIN_SPECIFIC_LIBS}}`                   | None. No maps, no geo, no editor. Charts are hand-drawn SVG — no charting library.                 |
-| `{{THEME_VARIANT}}`                          | Dark theme, already derived from the same tokens (`.dark` in `styles/tokens.css`)                  |
+| `{{DOMAIN_SPECIFIC_LIBS}}`                   | None. No maps, no geo, no editor, no charting library.                                             |
 | `{{OUTPUT_DIR}}`                             | `docs/design-os/`                                                                                  |
+
+The full resolved-constant table, including the counts measured against the working tree, is in
+[the brief](../MASTER_PROMPT_COMPLETE.md#resolved-constants).
 
 ## Why this and not the alternative
 
@@ -43,7 +48,9 @@ deactivates them. Destructive actions live here and need confirmation.
 
 **Internal Ops** (`ADMIN`) — watches aggregate health: active vs. past-due subscriptions,
 overdue invoices, churn. Never edits a single customer's data from these screens; this is a
-read surface that hands off to support tooling.
+read surface that hands off to support tooling. The two exceptions — running the billing cycle
+and suspending or restoring an account — are write actions behind a confirm step
+([E6, E7](01-information-architecture.md#e6--watch-platform-health-internal-ops)).
 
 Admin and Ops share the `ADMIN` role today. They are separated as personas because their
 screens answer different questions, and because a future `OPS` role would split cleanly
@@ -86,6 +93,8 @@ along this seam.
   administrator.
 - Deactivating a plan must not cascade to subscriptions; `Subscription.plan` has no
   `onDelete: Cascade` and that is deliberate.
+- `Decimal` fields arrive over JSON as `string`. They are typed as `string` and parsed at the
+  formatting boundary — never with a `Number()` scattered through a component.
 
 ## Success metrics
 
@@ -100,13 +109,30 @@ automation, tax/VAT handling, multi-currency, seat provisioning, or an in-app su
 `Invoice.stripeInvoiceId` and `PaymentMethod.stripeToken` are integration seams, not
 features to build now.
 
-## Design principles
+## Product principles
+
+How the product behaves and treats its users. None of them is a visual decision; how each is
+expressed on screen is decided when the page is built, with the owner.
 
 1. **The meter is the hero.** Every customer screen answers "am I within my limits" before
    it answers anything else.
 2. **Money is never ambiguous.** Amounts carry currency, periods carry both endpoints, and
    status is a word, never a colour alone.
 3. **Destructive actions confirm.** Cancel, deactivate, delete — all require a second step.
-4. **Application register, not editorial.** This is a console. Dense spacing, `text-h4` page
-   titles, no hero type. Enforced by `starter/application-register-density`.
+4. **Built for the repeat visit.** Meter is a console an operator returns to daily; it is
+   optimised for finding and acting, not for a first impression. The public landing route `/`
+   is the one surface whose job is the first impression.
 5. **Empty, loading, and error are designed states**, not afterthoughts.
+
+### Changed in the 2026-09-28 regeneration
+
+- Principle 4 was _"Application register, not editorial — dense spacing, `text-h4` page titles,
+  no hero type"_. That is a visual prescription; the product intent under it (a console built
+  for the repeat visit, with `/` as the one first-impression surface) is kept, in the brief's
+  wording. The lint rule that still enforces the old register in code is a code convention,
+  not a requirement of this document — see
+  [Frontend Architecture](03-frontend-architecture.md#rules-outside-this-design-os).
+- The `{{THEME_VARIANT}}` glossary row (a dark theme derived from the token file) was dropped.
+  The user-facing **theme preference** survives as a behaviour —
+  [`ThemeToggle`](07-component-library.md#topbar--themetoggle--authcard); what each theme looks
+  like is not specified here.
