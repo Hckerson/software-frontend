@@ -1,7 +1,8 @@
 # Phases 8–9 — Roadmap & Quality
 
 > Status: settled · regenerated 2026-09-28 under the standing brief's
-> [No visual prescription](../MASTER_PROMPT_COMPLETE.md#no-visual-prescription) rule.
+> [No visual prescription](../MASTER_PROMPT_COMPLETE.md#no-visual-prescription) rule · self-audited
+> 2026-09-30 against its [Self-audit before delivery](../MASTER_PROMPT_COMPLETE.md#self-audit-before-delivery).
 > Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-8--implementation-roadmap)
 > and its [Phase 9](../MASTER_PROMPT_COMPLETE.md#phase-9--quality-assurance). References
 > [Phase 7](03-frontend-architecture.md). The next body of work is the
@@ -32,7 +33,7 @@ QA here is functional. Visual quality is judged when each page is built, with th
 | 1     | Transport rewritten, token registry deduplicated, dark theme, build green                                |
 | 2     | Backend boots; OpenAPI emitted; contract covers 33 routes / 12 schemas                                   |
 | 3     | Product definition settled; IA, blueprints, architecture recorded                                        |
-| 4     | App shell, auth, route protection, hooks for every endpoint group                                        |
+| 4     | Authenticated layout, auth, route protection, hooks for every endpoint group                             |
 | 5     | Customer surfaces (dashboard, plans, subscription, usage, invoices, settings) and admin surfaces         |
 | 6     | Auth moved to an httpOnly cookie; `proxy.ts` enforces routes and admin access server-side                |
 | 7     | RS256 keypair signing; the proxy verifies signatures with WebCrypto, no shared secret                    |
@@ -55,8 +56,9 @@ The three dependency-gated gaps were approved and are now implemented.
    (the CJS major matching Nest 11 — v12 is ESM-only and breaks the Jest harness) calls
    `CycleService.runAll()` daily at 02:00 from
    [`cycle.scheduler.ts`](../../../backend/src/modules/core/cycle/cycle.scheduler.ts). The
-   frontend also gained the operator surface it never had: `admin-cycle-controls` on `/admin`
-   and a per-row **Issue invoice** action on `/admin/subscriptions`. Before this, the endpoints
+   frontend also gained the operator path it never had: an operator can run the cycle from
+   `/admin` (`admin-cycle-controls`) and issue one subscription's invoice from
+   `/admin/subscriptions` (`issue-invoice-button`). Before this, the endpoints
    built in Phase B4 to "exercise the path before the scheduler exists" were reachable only by
    `curl`.
 2. **Password reset emails are delivered.** `SmtpResetDelivery` (Nodemailer) sits behind the
@@ -92,9 +94,10 @@ The three dependency-gated gaps were approved and are now implemented.
    `issue-invoice`. Compared in constant time over SHA-256 digests; fails closed when unset or
    shorter than 32 characters; a request that offers a wrong token is refused outright rather
    than falling back to a session.
-7. **Usage history is charted.** One chart per metric on its own scale, against the plan limit,
-   with the table kept as a disclosure so every value is also text. No charting library: three
-   single-series charts did not justify the dependency.
+7. **Usage history is charted.** Each metric on its own scale, against the plan limit, and every
+   value is also available as text. Built as one chart per metric — a record of the code, not a
+   requirement. No charting library: three single-series charts did not justify the
+   dependency.
 
 ## Found in the deferred pass
 
@@ -104,41 +107,41 @@ The three dependency-gated gaps were approved and are now implemented.
   refuses with 403, and `JwtStrategy.validate` refuses an existing token on its next request,
   so a suspension takes effect immediately rather than when a seven-day token expires. The
   status is checked **after** the password, so an anonymous caller learns nothing — a wrong
-  password on a suspended account still says "Invalid credentials". Wiring a Suspend button
-  onto the old behaviour would have been a control that claimed to do something it did not.
+  password on a suspended account still says "Invalid credentials". Offering suspension on the
+  old behaviour would have been an action that claimed to do something it did not.
 - **An administrator could suspend or demote themselves.** Admins could change any account's
   `role` and `status`, their own included — a one-click lockout, and with one administrator, a
   lockout of everyone. The backend now refuses a self-change to either field with 403.
-- **Every admin page also highlighted Overview.** The sidebar matched by prefix, and `/admin`
-  prefixes every admin route. The active link is now the longest match.
+- **Every admin route also marked Overview as current.** Navigation matched by prefix, and
+  `/admin` prefixes every admin route. The current destination is now the longest match.
 - **The `/usage` blueprint and billing plan F2 described an endpoint that no longer existed** —
   a three-shape union normalised in `lib/utils/usage.ts`. It returns one shape and the
   normaliser is gone; both documents now say so.
 - _Delivered history, not a requirement — how charts look is a build decision._ **The brand
   accent failed as a data colour.** `#1f4e3d` was too dark (OKLCH L 0.386) and too
   grey (C 0.06) to read as a mark. `--colors-chart-series` was set to the nearest step of the same hue
-  that passes lightness, chroma, and contrast against the card in each theme, found by search
+  that passes lightness, chroma, and contrast against its background in each theme, found by search
   and checked by the dataviz validator rather than by eye: `#027254` light, `#449e7d` dark.
-- **Rendering the chart caught a label collision the tests could not.** "Limit 500K" sat on
-  the latest value label, and in any month billed for overage it would have sat on the data
-  itself. The label is now dropped whenever it would obscure a value; the caption states the
-  limit either way. (The placement mechanics are history, not a requirement.)
+- **Rendering the chart caught a label collision the tests could not.** The "Limit 500K" label
+  obscured the latest value, and in any month billed for overage it would have obscured the data
+  itself. The label is now dropped whenever it would obscure a value; the limit is stated in text
+  either way.
 
 ## Known gaps, ranked
 
 1. **Stripe is not integrated.** Payment methods manage placeholder records; `stripeToken` and
-   `stripeInvoiceId` are reference columns. The add-card form is deferred with it, since a form
-   that invents a token would tell a customer their card is on file when nothing was tokenised.
+   `stripeInvoiceId` are reference columns. Adding a card is deferred with it, since a flow that
+   invents a token would tell a customer their card is on file when nothing was tokenised.
 2. **The in-process scheduler has no cross-instance lock.** With more than one instance, run
    `BILLING_CYCLE_CRON=off` on all of them and trigger externally with the cycle token. No
    advisory lock was added: the jobs are idempotent by construction, and a Prisma connection
    pool cannot hold a session-level advisory lock across two queries.
-3. **The customer list is unpaginated.** `GET /users` returns every account and the table
-   filters client-side, which is right at this scale and wrong at tens of thousands. Paging
+3. **The customer list is unpaginated.** `GET /users` returns every account and the list is
+   filtered client-side, which is right at this scale and wrong at tens of thousands. Paging
    belongs on the endpoint, not in the component.
-4. **Invoice rows are pointer-only.** `DataTable` opens a row on click with no focus or key
-   handling, and it is the list's only route to `/invoices/[id]` — a keyboard user cannot open
-   an invoice. Found while regenerating the
+4. **Invoices open by pointer only.** The `DataTable` contract opens a record on click with no
+   focus or key handling, and that is the list's only route to `/invoices/[id]` — a keyboard user
+   cannot open an invoice. Found while regenerating the
    [interaction contracts](07-component-library.md#known-interaction-gaps).
 5. **`ConfirmDialog` does not trap focus.** Escape and focus restore are asserted; Tab can still
    leave the dialog.
@@ -224,8 +227,9 @@ first time a real request hit a real database.
 ## QA checklist
 
 **Behavioural consistency** — the same action works the same way everywhere: every destructive
-action confirms through `ConfirmDialog`; every amount goes through `Money` and every period
-through `PeriodRange`; shared descriptions (`subscription-facts`, `invoice-table`,
+action confirms first ([confirmation contract](07-component-library.md#confirmdialog)); every
+amount follows the [money contract](07-component-library.md#money) and every period the
+[period contract](07-component-library.md#periodrange); shared descriptions (`subscription-facts`, `invoice-table`,
 `plan-feature-list`, `plan-metric-fields`) stay pure so two surfaces cannot disagree. The
 layering is lint-enforced rather than reviewed by eye. How styles are written is checked by the
 code's own style rules, which are outside this checklist.
@@ -245,8 +249,8 @@ clamped to the track maximum while the visible text still states the true percen
 [the blueprints](02-page-blueprints.md#the-page-contract).
 
 **Responsive** — every customer and admin surface stays fully operable from phone width up:
-the shell, the meters, the plan catalogue and the tables lose no information and no action on a
-small screen. How each adapts is a build decision.
+navigation, usage readings, the plan catalogue and every list of records lose no information and
+no action on a small screen. How each adapts is a build decision.
 
 **Verification gates** — green on **both** sides, which was not previously true: the backend's
 `pnpm lint` exited 1 while this checklist claimed otherwise.
@@ -296,3 +300,11 @@ visible focus; responsive "named classes in `components.css`" became the operabi
 requirement. The chart-colour and label-placement findings are kept as delivered history. Known
 gaps 4–7 were added from the regenerated
 [interaction contracts](07-component-library.md#known-interaction-gaps).
+
+**2026-09-30 self-audit.** No stage, finding, gap, gate or checklist item was removed. Rewritten
+as behaviour: "app shell" (stage 4), "a per-row **Issue invoice** action", "the table kept as a
+disclosure", "a Suspend button … a control", "the sidebar … active link", "against the card",
+"sat on the latest value label … the caption", "the add-card form", "the table filters",
+"Invoice rows"; the QA checklist's "confirms through `ConfirmDialog`", "goes through `Money` /
+`PeriodRange`" (now links to those contracts) and "the shell … the tables" in the responsive
+line.

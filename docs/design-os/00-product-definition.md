@@ -47,13 +47,13 @@ relationship with the product is: _am I covered, and what do I owe?_
 deactivates them. Destructive actions live here and need confirmation.
 
 **Internal Ops** (`ADMIN`) — watches aggregate health: active vs. past-due subscriptions,
-overdue invoices, churn. Never edits a single customer's data from these screens; this is a
+overdue invoices, churn. Never edits a single customer's data from the console; this is a
 read surface that hands off to support tooling. The two exceptions — running the billing cycle
 and suspending or restoring an account — are write actions behind a confirm step
 ([E6, E7](01-information-architecture.md#e6--watch-platform-health-internal-ops)).
 
 Admin and Ops share the `ADMIN` role today. They are separated as personas because their
-screens answer different questions, and because a future `OPS` role would split cleanly
+routes answer different questions, and because a future `OPS` role would split cleanly
 along this seam.
 
 ## Jobs to be done
@@ -67,7 +67,7 @@ along this seam.
    payment details._
 5. _(Admin) When pricing changes, I want to deactivate a plan without deleting the
    subscriptions that reference it._
-6. _(Ops) When revenue is at risk, I want past-due and overdue counts on one screen._
+6. _(Ops) When revenue is at risk, I want past-due and overdue counts in one place._
 
 ## Business rules
 
@@ -114,7 +114,7 @@ features to build now.
 How the product behaves and treats its users. None of them is a visual decision; how each is
 expressed on screen is decided when the page is built, with the owner.
 
-1. **The meter is the hero.** Every customer screen answers "am I within my limits" before
+1. **The meter comes first.** Every customer route answers "am I within my limits" before
    it answers anything else.
 2. **Money is never ambiguous.** Amounts carry currency, periods carry both endpoints, and
    status is a word, never a colour alone.
@@ -136,3 +136,10 @@ expressed on screen is decided when the page is built, with the owner.
   The user-facing **theme preference** survives as a behaviour —
   [`ThemeToggle`](07-component-library.md#topbar--themetoggle--authcard); what each theme looks
   like is not specified here.
+
+### Changed in the 2026-09-30 self-audit
+
+- Principle 1 was _"The meter is the hero"_ and spoke of every customer "screen". "Hero" is a
+  placement word under the brief's
+  [Self-audit before delivery](../MASTER_PROMPT_COMPLETE.md#self-audit-before-delivery); the
+  principle is unchanged in meaning — usage is answered first on every customer route.

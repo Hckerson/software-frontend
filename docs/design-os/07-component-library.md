@@ -27,7 +27,7 @@ from accumulating page-specific widgets.
 
 - [Contract defaults](#contract-defaults)
 - [`common/` — the library](#common--16-components)
-- [`layout/` — the shell](#layout--6-components)
+- [`layout/` — route layouts](#layout--6-components)
 - [`ui/forms/` — input primitives](#uiforms--9-primitives)
 - [`providers/` and `wrappers/`](#providers--wrappers--2-components)
 - [Anti-patterns](#anti-patterns)
@@ -51,7 +51,8 @@ not stated takes the default here.
 exist in code but are not part of any contract.
 
 **Data.** **No component fetches data** — data arrives as inputs from a section. The three
-exceptions are the shell's own reads (`AppShell`, `Topbar`) and are named on their contracts.
+exceptions are the layout components' own reads (`AppShell`, `Topbar`) and are named on their
+contracts.
 
 **States.** Any component that can render nothing must render a designed nothing. Loading is
 announced to assistive technology.
@@ -82,7 +83,7 @@ never submits by accident. **Loading:** while `isLoading`, the button is disable
 
 ### `LinkButton`
 
-**Purpose:** navigation presented as an action. **Inputs:** `href`, `children`. Renders a real
+**Purpose:** navigation that reads as an action. **Inputs:** `href`, `children`. Renders a real
 link (`next/link`), so it is announced as a link, activates on Enter and can be opened in a
 new tab.
 **Do:** use for the `/plans` and `/dashboard` actions in empty states. **Don't:** attach
@@ -90,14 +91,14 @@ new tab.
 
 ### `PageHeader`
 
-**Purpose:** the title every route opens with. **Inputs:** `title`, `description`, `actions`.
+**Purpose:** the route's title. **Inputs:** `title`, `description`, `actions`.
 **ARIA:** renders the page's `<h1>`, so each route has exactly one.
 
 ### `SectionCard`
 
-**Purpose:** the titled region a section's content belongs to. **Inputs:** `title?`,
+**Purpose:** a titled region grouping one section's content. **Inputs:** `title?`,
 `description?`, `action?`, `children`. **ARIA:** a `<section>`; the title is an `<h2>`, so
-sections sit one level under the page title.
+section headings are one level deeper than the page's `<h1>`.
 
 ### `StatCard`
 
@@ -228,10 +229,11 @@ never touch `event.target`. **Don't:** rely on `placeholder` as the label.
 
 ### `AppShell`
 
-**Purpose:** the authenticated frame — navigation, account bar, content. **Inputs:** `children`;
-reads `GET /users/me` for `role`. **Loading:** while the user is pending, a loading state stands
-in for the whole frame.
-**Critical:** `role` decides **only whether the admin nav group renders. It never authorises.**
+**Purpose:** wraps every authenticated route with navigation and account access. **Inputs:**
+`children`; reads `GET /users/me` for `role`. **Loading:** while the user is pending, loading is
+announced and the route's content waits.
+**Critical:** `role` decides **only whether the Administration navigation group is offered. It
+never authorises.**
 Authorisation is [`proxy.ts`](../../proxy.ts) plus the backend's `RolesGuard`. Hiding a link is
 navigation, not security.
 
@@ -247,7 +249,7 @@ no longer shadows every admin page.
 
 ### `Topbar` · `ThemeToggle` · `AuthCard`
 
-**`Topbar`** — the signed-in account's name and email, and account actions. Reads
+**`Topbar`** — identifies the signed-in account (name and email) and lets the user sign out. Reads
 `useCurrentUser`, stating _"Loading account"_ until it resolves. **Sign out** calls
 `POST /auth/logout` (the server clears the cookie; the client cannot), shows loading while
 pending, and replaces the route with login when it settles — success or failure.
@@ -255,8 +257,8 @@ pending, and replaces the route with login when it settles — success or failur
 preference, else the operating system's. **Persistence:** `localStorage` — the only thing the app
 keeps there. **ARIA:** `aria-label` names the action it will take (_Switch to dark theme_), not
 the current state. What each theme looks like is not specified here.
-**`AuthCard`** — **Inputs:** `title`, `description`, `children`. The unauthenticated frame;
-renders the `<h1>` for auth routes so the forms inside carry none.
+**`AuthCard`** — **Inputs:** `title`, `description`, `children`. Wraps each unauthenticated
+route and renders its `<h1>`, so the forms it wraps carry none.
 
 ---
 
@@ -267,7 +269,7 @@ convention rather than raw DOM events.
 
 | Primitive       | Inputs                                             | Behaviour                                                                                          |
 | --------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `InputTemplate` | `label`, `icon?`, `rightSection?`, `children`      | Shared label and adornment wrapper the others render inside                                        |
+| `InputTemplate` | `label`, `children`                                | Shared label wiring the other primitives are built on; its adornment inputs select appearance only |
 | `TextInput`     | `label`, `value`, `handleChange(event)`            | Ids and names derive from `label`                                                                  |
 | `TextAreaInput` | `rows`, `label`, `value`, `handleChange(event)`    | Multi-line text                                                                                    |
 | `SelectInput`   | `label`, `data: Option[]`, `value`, `handleChange` | Button with `aria-haspopup="listbox"` / `aria-expanded`; options `role="option"` + `aria-selected`; prepends an **All** option; closes on Escape or outside click. Options from [`lib/data/`](../../lib/data/) |
@@ -329,7 +331,7 @@ documents only.
    or key handling, and `invoice-table` uses it as the only route to `/invoices/[id]`. A keyboard
    user cannot open an invoice from the list.
 2. **`ConfirmDialog` does not trap focus.** It declares `aria-modal` and handles Escape, but Tab
-   can leave the dialog for the page behind it.
+   can leave the dialog for the rest of the page.
 3. **`SelectInput` has no arrow-key navigation.** Options are reachable with Tab; the listbox
    pattern also expects ↑/↓, Home and End.
 4. **`UsageMeter` does not yet offer the upgrade path when exceeded**
@@ -370,3 +372,13 @@ survives. Dropped as visual prescription:
 
 Corrected against the code: `SidebarGroup` matches the **longest** href, not "the path or any
 descendant"; `ConfirmDialog`'s guard list now includes the admin actions added since.
+
+**2026-09-30 self-audit.** Every contract survives; component names are kept because this
+phase's job is their behaviour. Reworded so no contract says how or where anything appears:
+`PageHeader` "the title every route opens with"; `SectionCard` "sections sit one level under
+the page title" (now heading depth); `AppShell` "the authenticated frame — navigation, account
+bar, content" and "a loading state stands in for the whole frame"; `Topbar`'s inventory of what
+it holds; `AuthCard` "the unauthenticated frame … the forms inside"; `LinkButton` "presented
+as"; `ConfirmDialog` "the page behind it"; the contents entry "the shell". `InputTemplate`'s
+`icon?` / `rightSection?` inputs were dropped from its contract as appearance-only, per the
+Inputs default above.

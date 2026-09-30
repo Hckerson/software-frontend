@@ -150,8 +150,9 @@ needs **no dependency** on either side. Imported keys are cached per PEM.
 It **fails closed**: if `AUTH_JWT_PUBLIC_KEY` is unset, every protected route redirects to
 login rather than falling open.
 
-There is no client-side gate any more and no flash of protected shell. `AppShell` reads `role`
-from `GET /users/me` purely to decide whether to render the admin nav group.
+There is no client-side gate any more and no flash of protected content. `AppShell` reads
+`role` from `GET /users/me` purely to decide whether the Administration navigation group is
+offered — never to authorise.
 
 The verification path is unit-tested against a real keypair in
 [`verify-token.test.ts`](../../lib/auth/verify-token.test.ts): a valid token passes; a token
@@ -170,7 +171,7 @@ momentarily reachable by script at login time, though never persisted — remove
 ## Performance
 
 Server Components by default; `"use client"` only where interaction demands it — which in
-practice is every screen that reads React Query, so sections are client and layouts/routes
+practice is every section that reads React Query, so sections are client and layouts/routes
 stay server where they can. Route-level code splitting is automatic. Fonts load through
 `next/font`, self-hosted with `display: swap`, so text is never blocked on a font request.
 Usage charts are drawn without a charting library, so the only bundle cost is their own code.
@@ -203,3 +204,7 @@ folder tree, and the two style rows of the layering table (`token-first-classnam
 [Rules outside this design OS](#rules-outside-this-design-os). The token work it recorded is kept
 above as history. Added: `lib/auth/`, `tools/`, the `no-comments` row, and the rule for new Nest
 handlers, all from the brief.
+
+**2026-09-30 self-audit.** The folder tree and file paths are kept as a record of the code. The
+proxy section's "flash of protected shell" and "render the admin nav group" were reworded as
+behaviour (protected content; the Administration group being offered).

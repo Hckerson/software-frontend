@@ -134,7 +134,7 @@ an invoice number. It is injected nowhere. The work is wiring and policy, not al
 | B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued".                                           |
 | B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | **Done.** `OverageCalculatorService` is the single place overage becomes money, shared by the cycle and the upcoming-invoice estimate so the two cannot disagree. Unlimited metric contributes zero. |
 | B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                                                                      |
-| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also has a UI**: an Issue invoice action per row on `/admin/subscriptions`.                                     |
+| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also reachable from the console**: an operator can issue one subscription's invoice from `/admin/subscriptions`. |
 
 ### Decision taken — overage pricing (option 2)
 
@@ -144,8 +144,8 @@ takes a rate the system cannot supply. Options:
 1. **No overage** — exceeding a limit blocks the request (today's behaviour). Simplest, and
    consistent with the current `BadRequestException`. Invoices are then always the flat plan price.
 2. **Overage rates per metric on the plan** — add `overageRates Json` to `SubscriptionPlan`
-   (e.g. `{ "API_CALLS": 0.0001 }`). Requires a migration and admin-form fields.
-3. **Hard cap with upgrade prompt** — block, but surface the upgrade path in the UI.
+   (e.g. `{ "API_CALLS": 0.0001 }`). Requires a migration and a way for admins to set the rates.
+3. **Hard cap with upgrade prompt** — block, but offer the customer the upgrade path.
 
 **Resolved: option 2.** Option 1 was the smaller step, but the product is called Meter and the
 README promises usage metering — a console that blocks at the limit is a quota system, not a
@@ -187,17 +187,17 @@ The `PaymentMethod` model and repo exist; there are **zero endpoints**.
 | D1  | `PaymentMethodsModule` — list / add / set-default / remove | Every handler scoped to the caller via `assertCanActOn`. Given two IDORs already found in this codebase, ownership is the design centre here, not an afterthought. |
 | D2  | Never return `stripeToken`                                 | Same `omit` pattern as `PublicUser`. Expose only `last4Digits`, `expiryMonth/Year`, `isDefault`.                                                                   |
 | D3  | Enforce exactly one default                                | Setting a new default clears the previous one in a transaction.                                                                                                    |
-| D4  | Frontend `/settings` section                               | **Partly delivered.** `payment-methods` + `payment-method-row` list, set default and remove. **No add form**, deliberately — see below.                            |
+| D4  | Frontend `/settings` section                               | **Partly delivered.** `payment-methods` + `payment-method-row` list, set default and remove. **Adding is not offered**, deliberately — see below.                  |
 
 Card data never touches this system — `stripeToken` is a reference. Without a processor, "add
 card" means storing a token from a client-side integration. **Until Stripe is in scope, D1–D4
 can only manage placeholder records**, which is worth being clear-eyed about before building it.
 
-**This is why there is no add-card form.** `useAddPaymentMethod` and `POST /payment-methods`
-both exist and work; the missing piece is deliberately the UI, because a form that invents a
+**This is why adding a card is not offered.** `useAddPaymentMethod` and `POST /payment-methods`
+both exist and work; the missing piece is deliberately the UI, because a flow that invents a
 placeholder token would tell a customer their card is on file when nothing was tokenised. The
-section's empty state names the gap rather than hiding it. **Build the form in the same change
-as the Stripe integration, not before** — the unconsumed hook is the record of this decision,
+section's empty state tells the customer about the gap rather than hiding it. **Build adding a
+card in the same change as the Stripe integration, not before** — the unconsumed hook is the record of this decision,
 not an oversight.
 
 ---
@@ -341,3 +341,7 @@ Against a seeded Postgres and a running API, signed in as the seeded customer on
 Nothing in this plan prescribed visual design, and no finding, phase, decision or verification
 was changed. Added a governing link to the brief and a contents list (the file exceeds 250
 lines); the sequencing diagram became a dependency table.
+
+**2026-09-30 self-audit.** No finding, phase, decision or verification changed. Screen-content
+wording became behaviour: B4's "Issue invoice action per row", option 2's "admin-form fields",
+option 3's "surface … in the UI", D4's "No add form" and the "add-card form" paragraph.

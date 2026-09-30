@@ -331,10 +331,14 @@ weigh changes against it first.
 
 Using the experience maps, design:
 
-Navigation hierarchy · Sitemap · Content hierarchy · Role-based navigation · Permissions ·
+Navigation hierarchy · Sitemap · Role-based navigation · Permissions ·
 Content taxonomy · Labelling conventions · Cross-linking · Search hierarchy · Filtering
 hierarchy · SEO hierarchy · Breadcrumb strategy · Empty routes · Fallback routes · Future
 expansion strategy.
+
+Describe structure and reachability only: which pages exist, how they relate, which route group
+each belongs to and who can reach it. Never what a layout shows (navigation bars, sidebars,
+headers, cards or any other on-screen chrome).
 
 ### Settled for Meter
 
@@ -353,9 +357,9 @@ Two route groups behind one shell:
   /admin  /admin/plans  /admin/subscriptions  /admin/invoices
 ```
 
-Permissions are enforced server-side before render, not by a client gate. `AppShell` reads
-`role` from `GET /users/me` **only** to decide whether to render the admin nav group — never
-to authorise.
+Permissions are enforced server-side before render, not by a client gate. The client reads
+`role` from `GET /users/me` **only** to decide whether the Administration group is offered —
+never to authorise.
 
 **Adding a route means adding it to the sitemap, to `navigation.ts`, and to the permission
 table in the same change.**
@@ -369,11 +373,12 @@ table in the same change.**
 
 For every page create functional blueprints. For each page define:
 
-Purpose · Business objective · User objective · Primary tasks · Content requirements (the
-information and actions the page must offer, in priority order; never layout, placement or
-module names that imply a layout) · Required data · Permissions · Device needs (what users on
-each device need to do; never layout) · Loading states · Empty states · Error states · Success
-states · Actions · Dependencies · Implementation notes.
+Purpose · Business objective · User objective · Primary tasks (what the user comes to get
+done, as goals in their own words; never fields, buttons or links) · Required data ·
+Permissions · Device needs (what users on each device need to do; never layout) · Loading
+states · Empty states · Error states · Success states · Dependencies · Implementation notes.
+
+States describe what happens and what the user is told, never where it appears on screen.
 
 **All four states are mandatory on every data surface.** A page blueprint that omits its empty
 state is incomplete, not concise.
@@ -419,12 +424,14 @@ decision on record rather than an oversight.
 
 Break every page into sections by the job each one does. Each section must include:
 
-Purpose · Responsibilities · Content model · Data requirements · Interaction model · Controls
-· Device needs · Accessibility requirements · Loading states · Error states · Empty states ·
-Reuse potential · Technical notes.
+Purpose · Responsibilities · Data requirements · Interaction model · Device needs ·
+Accessibility requirements · Loading states · Error states · Empty states · Reuse potential ·
+Technical notes (data, validation and dependencies; never components to build, cards or shared
+visual shells).
 
-**No section should solve multiple unrelated jobs.** Describe content and behaviour only.
-Never specify layout, order on screen, sizing, imagery, animation or wireframes.
+**No section should solve multiple unrelated jobs.** Describe behaviour only. Never specify
+what the section shows, which components or controls it uses, layout, order on screen, sizing,
+imagery, animation or wireframes.
 
 ### Settled for Meter
 
@@ -875,10 +882,31 @@ Never prescribe visual design. No colours, fonts, sizes, spacing, layouts, place
 here", "hero with image"), imagery, animation, visual references or wireframes, in any phase
 or in any implementation guidance.
 
-Describe what users need, what information and actions each page must offer and in what
-priority, and how it behaves. Never how it looks or where things sit.
+Never prescribe screen content either. No inventories of fields, buttons, links or headings, no
+component lists, and no shared cards or shells, in any phase or in any implementation guidance.
+
+Describe what users need to get done and how the product behaves. Never what a page contains,
+how it looks or where things sit.
 
 The look of each page is decided when it is built, with the owner.
+
+### Self-audit before delivery
+
+Before delivering, audit Phases 1–5, the roadmap and any implementation guidance against this
+rule, and rewrite or remove every passage that fails. A passage fails when it:
+
+- uses a field this brief does not define for that phase (for example "Content requirements",
+  "Content model", "Content hierarchy", "Controls", "Actions", "Frame" or "Content, in order");
+- ranks what a page or section shows ("primary", "by priority", "in priority order", "first"),
+  which is layout by another name;
+- lists the fields, buttons, links or headings a page or section contains;
+- names the components, cards, shells or controls a page or section is built from;
+- says where something appears: top, bottom, under, above, beside, left, right, sidebar,
+  header, banner, hero, card, modal or any other position or container.
+
+Phase 6 names interactive element types because its job is their behaviour, and Phase 7 names
+files and folders because its job is code organisation. Neither may say how or where anything
+appears. List what the audit rewrote or removed under **Changed** in the manifest.
 
 ---
 
@@ -911,8 +939,8 @@ contradict them.
 
 **Regeneration.** A run over `docs/design-os/` is a **merge, not an overwrite**: every page,
 section, interaction contract, flow, persona, role and state already defined survives.
-Visual prescriptions from earlier runs (tokens, palettes, layouts, wireframes, styling
-approaches) are not features: drop them and list them as changed. The current documents
+Visual and content prescriptions from earlier runs (tokens, palettes, layouts, wireframes,
+styling approaches, screen-content inventories, component lists, placement) are not features: drop them and list them as changed. The current documents
 predate this rule and still carry some — `03`, `06` and `07` in particular. Until they are
 regenerated, where they describe the look they describe the code as built, not a requirement.
 
