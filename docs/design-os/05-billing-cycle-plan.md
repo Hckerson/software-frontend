@@ -1,7 +1,11 @@
 # Billing Cycle — Implementation Plan
 
 Turns the console from one that _displays_ billing into one that _does_ billing.
-References [Roadmap & QA](04-roadmap-and-qa.md) and [Product Definition](00-product-definition.md).
+Governed by [MASTER_PROMPT_COMPLETE.md](../MASTER_PROMPT_COMPLETE.md#phase-8--implementation-roadmap)
+as the work in progress that follows Phase 8 ("next" in the
+[phase map](../MASTER_PROMPT_COMPLETE.md#phase-map)). References
+[Roadmap & QA](04-roadmap-and-qa.md) and [Product Definition](00-product-definition.md). This plan
+is backend and behaviour only; it prescribes no visual design.
 
 Status: **implemented 2026-09-03**. The three dependency-gated items are approved and built —
 see [Previously gated, now approved and built](#previously-gated-now-approved-and-built).
@@ -21,6 +25,21 @@ Two blocking decisions were taken as **stated assumptions** rather than stalling
   later is a thin caller over the same methods.
 
 Reverse either by saying so; neither is baked into a schema.
+
+---
+
+## Contents
+
+- [What the investigation found](#what-the-investigation-found)
+- [Phase A](#phase-a--foundations-no-new-dependencies) ·
+  [Phase B](#phase-b--invoice-generation) · [Phase C](#phase-c--the-scheduler) ·
+  [Phase D](#phase-d--payment-methods) · [Phase E](#phase-e--password-reset) ·
+  [Phase F](#phase-f--verification)
+- [Sequencing](#sequencing) · [Decisions, and how they went](#decisions-and-how-they-went)
+- [Environment note](#environment-note)
+- [Previously gated, now approved and built](#previously-gated-now-approved-and-built)
+- [Verified live — overage billing](#verified-live--overage-billing) ·
+  [Verified live](#verified-live)
 
 ---
 
@@ -115,7 +134,7 @@ an invoice number. It is injected nowhere. The work is wiring and policy, not al
 | B1  | Provide `InvoiceGeneratorService` and add `issueInvoiceForPeriod(subscriptionId, period)` | Idempotent by construction — `@@unique([subscriptionId, billingPeriodStart])` already exists; catch the unique violation and treat it as "already issued".                                           |
 | B2  | Compute overage from `UsageLog` vs `plan.limits`                                          | **Done.** `OverageCalculatorService` is the single place overage becomes money, shared by the cycle and the upcoming-invoice estimate so the two cannot disagree. Unlimited metric contributes zero. |
 | B3  | Persist `DRAFT` → transition to `SENT` when issued                                        | The `stripeInvoiceId` column stays null; no processor in scope.                                                                                                                                      |
-| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also has a UI**: an Issue invoice action per row on `/admin/subscriptions`.                                     |
+| B4  | Admin endpoint to issue manually                                                          | `POST /admin/billing/subscriptions/:id/issue-invoice`, `ADMIN` + `RolesGuard`. **Now also reachable from the console**: an operator can issue one subscription's invoice from `/admin/subscriptions`. |
 
 ### Decision taken — overage pricing (option 2)
 
@@ -125,8 +144,8 @@ takes a rate the system cannot supply. Options:
 1. **No overage** — exceeding a limit blocks the request (today's behaviour). Simplest, and
    consistent with the current `BadRequestException`. Invoices are then always the flat plan price.
 2. **Overage rates per metric on the plan** — add `overageRates Json` to `SubscriptionPlan`
-   (e.g. `{ "API_CALLS": 0.0001 }`). Requires a migration and admin-form fields.
-3. **Hard cap with upgrade prompt** — block, but surface the upgrade path in the UI.
+   (e.g. `{ "API_CALLS": 0.0001 }`). Requires a migration and a way for admins to set the rates.
+3. **Hard cap with upgrade prompt** — block, but offer the customer the upgrade path.
 
 **Resolved: option 2.** Option 1 was the smaller step, but the product is called Meter and the
 README promises usage metering — a console that blocks at the limit is a quota system, not a
@@ -168,17 +187,17 @@ The `PaymentMethod` model and repo exist; there are **zero endpoints**.
 | D1  | `PaymentMethodsModule` — list / add / set-default / remove | Every handler scoped to the caller via `assertCanActOn`. Given two IDORs already found in this codebase, ownership is the design centre here, not an afterthought. |
 | D2  | Never return `stripeToken`                                 | Same `omit` pattern as `PublicUser`. Expose only `last4Digits`, `expiryMonth/Year`, `isDefault`.                                                                   |
 | D3  | Enforce exactly one default                                | Setting a new default clears the previous one in a transaction.                                                                                                    |
-| D4  | Frontend `/settings` section                               | **Partly delivered.** `payment-methods` + `payment-method-row` list, set default and remove. **No add form**, deliberately — see below.                            |
+| D4  | Frontend `/settings` section                               | **Partly delivered.** `payment-methods` + `payment-method-row` list, set default and remove. **Adding is not offered**, deliberately — see below.                  |
 
 Card data never touches this system — `stripeToken` is a reference. Without a processor, "add
 card" means storing a token from a client-side integration. **Until Stripe is in scope, D1–D4
 can only manage placeholder records**, which is worth being clear-eyed about before building it.
 
-**This is why there is no add-card form.** `useAddPaymentMethod` and `POST /payment-methods`
-both exist and work; the missing piece is deliberately the UI, because a form that invents a
+**This is why adding a card is not offered.** `useAddPaymentMethod` and `POST /payment-methods`
+both exist and work; the missing piece is deliberately the UI, because a flow that invents a
 placeholder token would tell a customer their card is on file when nothing was tokenised. The
-section's empty state names the gap rather than hiding it. **Build the form in the same change
-as the Stripe integration, not before** — the unconsumed hook is the record of this decision,
+section's empty state tells the customer about the gap rather than hiding it. **Build adding a
+card in the same change as the Stripe integration, not before** — the unconsumed hook is the record of this decision,
 not an oversight.
 
 ---
@@ -212,14 +231,15 @@ only issuance and delivery are missing.
 
 ## Sequencing
 
-```
-A (foundations)  ──▶ B (invoices) ──▶ C (scheduler)
-                          │
-                          └──────────▶ F5 (cycle integration tests)
-D (payment methods)  ─ independent, gated on the Stripe question
-E (password reset)   ─ independent, gated on the email-provider question
-F1–F2 ─ independent, do any time; F1 pays for itself immediately
-```
+| Phase               | Depends on | Notes                                        |
+| ------------------- | ---------- | -------------------------------------------- |
+| A (foundations)     | —          | Critical path                                |
+| B (invoices)        | A          | Critical path                                |
+| C (scheduler)       | B          | Critical path                                |
+| F5 (cycle tests)    | B          |                                              |
+| D (payment methods) | —          | Independent; gated on the Stripe question    |
+| E (password reset)  | —          | Independent; gated on the email provider     |
+| F1–F2               | —          | Independent; F1 pays for itself immediately  |
 
 A → B → C is the critical path and the only sequence with hard ordering. D, E and F1–F2 can
 run in parallel or be dropped without affecting it.
@@ -315,3 +335,13 @@ Against a seeded Postgres and a running API, signed in as the seeded customer on
   token is refused on replay, and login with the new password works.
 - Payment methods: added, listed, exactly one default enforced, `stripeToken` never returned.
 - A non-admin receives 403 from every `/admin/billing/cycle/*` endpoint.
+
+## Changed in the 2026-09-28 regeneration
+
+Nothing in this plan prescribed visual design, and no finding, phase, decision or verification
+was changed. Added a governing link to the brief and a contents list (the file exceeds 250
+lines); the sequencing diagram became a dependency table.
+
+**2026-09-30 self-audit.** No finding, phase, decision or verification changed. Screen-content
+wording became behaviour: B4's "Issue invoice action per row", option 2's "admin-form fields",
+option 3's "surface … in the UI", D4's "No add form" and the "add-card form" paragraph.
