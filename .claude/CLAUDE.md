@@ -8,10 +8,9 @@ This is a reusable **Next.js App Router starter**. It ships architecture, conven
 2. **No hardcoding.** API routes, durations, enums, and copy that appears twice live in `lib/constants.ts` or feature-scoped `lib/<feature>/constants.ts`. Endpoints come from `lib/api-routes.ts`, shapes from Zod schemas. Seed and sample data lives in `lib/data/`, never inline in a page.
 3. **No `any` in TypeScript.** Use `unknown` + narrowing or a precise type. Derive types from Zod with `z.infer`.
 4. **Match the existing architecture.** Do not invent patterns, and do not invent locations — when you are unsure where something goes, re-read this file. State the reason before deviating.
-5. **Use the framework natively.** Next.js and the installed libraries (Query / Zustand / Zod / motion / CSS `clamp()`) cover the need. Do not add a dependency that duplicates one, and do not rebuild what the tool already does.
-6. **Single source of truth.** Name a recurring decision once as a semantic token and reference it everywhere. Define once, change in one place.
-7. **Minimize LOC.** Ship the shortest solution that stays maintainable.
-8. **No `console.log`, `console.error`, or debug statements** in committed code. Logging belongs in services.
+5. **Single source of truth.** Name a recurring decision once as a semantic token and reference it everywhere. Define once, change in one place.
+6. **Minimize LOC.** Ship the shortest solution that stays maintainable.
+7. **No `console.log`, `console.error`, or debug statements** in committed code. Logging belongs in services.
 
 ## Required patterns
 
