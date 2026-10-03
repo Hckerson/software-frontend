@@ -61,7 +61,7 @@ the working tree, not estimated.
 | `SUPPORTING_FLOWS`     | Authentication, onboarding, profile, plan-catalogue administration, ops oversight                                           |
 | `ROLE_DASHBOARDS`      | Customer dashboard (`/dashboard`), Admin console (`/admin`)                                                                 |
 | `ROLE`                 | `ADMIN \| USER` — exactly these two                                                                                         |
-| `DOMAIN_TOOL`          | The **usage meter**: quota consumed vs. plan limit. The hero interaction.                                                   |
+| `DOMAIN_TOOL`          | The **usage meter**: quota consumed vs. plan limit. The core interaction.                                                   |
 | `DOMAIN_TRANSACTION`   | Plan selection / plan change — the billing-state mutation                                                                   |
 | `DOMAIN_SPECIFIC_LIBS` | **None.** No maps, no geo, no editor. Charts are hand-drawn SVG — no charting library.                                      |
 | `SCALE_TARGET`         | Millions of subscriptions                                                                                                   |
@@ -475,7 +475,7 @@ PickInput · CalendarInput · FileInput · InputTemplate.
 This inventory is a record of what is built, not a prescription of what must exist. Three
 contracts carry the product's principles directly:
 
-- **UsageMeter** is the hero interaction and must expose `role="progressbar"` with
+- **UsageMeter** is the core interaction and must expose `role="progressbar"` with
   `aria-valuenow/min/max`.
 - **Money** and **PeriodRange** exist so that no component formats an amount or a period by
   hand — principle 2 made structural.

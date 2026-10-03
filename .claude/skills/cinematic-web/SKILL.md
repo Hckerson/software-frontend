@@ -49,12 +49,12 @@ Three candidate hero objects. For each: the object, the product truth it express
 
 ### 4. Technique and art direction
 
-- Pick the **hero route** from `techniques.md` (procedural canvas, scrubbed media, or real-time WebGL) and say why the other two lose for this metaphor.
+- Pick the **hero route** from `techniques.md` (procedural canvas, scrubbed media, or real-time WebGL) on what the metaphor needs, never on what is already installed, and say why the other two lose for this metaphor. A route that needs new packages is not a weaker choice.
 - Name the single hardest visual problem and the plan for it.
 - Palette as tokens (ground, ink, muted ink, accent, glow), type pair with `clamp()` sizes, motion curves and durations as tokens. These become entries in `styles/tokens.css`, never inline values.
 - ASCII wireframes of the hero and the peak scene at desktop and 390px.
 - **Fingerprint gate:** compare against `references/fingerprints.md`. The build must differ from every prior row on at least 4 of: page shape, nav treatment, hero route, scene sequence, close, signature move. Report the comparison.
-- List every package or tool the route needs that the repo lacks. Do not install; ask.
+- Name every package, dataset or tool the route needs that the repo lacks, in the concept itself: what each is for and what it costs (bundle weight, an outside service, an asset to source). They are part of the proposal, so approving the concept approves installing them. Never shrink the concept to avoid asking.
 
 ### 5. Build
 

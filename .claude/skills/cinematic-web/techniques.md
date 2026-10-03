@@ -4,15 +4,19 @@ How the cinematic register is built in this starter. Mechanics only; the concept
 
 ## Hero routes
 
-Pick one per build and justify it against the other two.
+Pick one per build on what the metaphor needs, and justify it against the other two. The Needs column is what to name in the concept, never a reason to choose a route.
 
 | Route                    | What it is                                                                             | Wins when                                                                                                               | Needs                                                                                                                         |
 | ------------------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **A. Procedural canvas** | Drawn every frame from math: raw WebGL2 for dense fields (strands, particles), 2D canvas or SVG only for a few hundred strokes | The metaphor is abstract structure (flows, networks, convergence). Pegasus is buildable here                            | Nothing new                                                                                                                   |
-| **B. Scrubbed media**    | A pre-rendered clip or image sequence whose frame is chosen by scroll progress         | The metaphor is photographic or physical (glass, liquid, a product, a place). Most likely how both references were made | Source footage or stills, `ffmpeg` to encode; an image or video generation service if nothing exists. Ask before any of these |
-| **C. Real-time WebGL**   | three.js via `@react-three/fiber` + `@react-three/drei`                                | Real refraction, true 3D the pointer can orbit, or geometry that must react live                                        | Those three packages. Ask before installing                                                                                   |
+| **A. Procedural canvas** | Drawn every frame from math: raw WebGL2 for dense fields (strands, particles), 2D canvas or SVG only for a few hundred strokes | The metaphor is abstract structure (flows, networks, convergence). Pegasus is buildable here                            | Often nothing. Name any library the field needs (deck.gl for real geography, ogl or regl for shader work) |
+| **B. Scrubbed media**    | A pre-rendered clip or image sequence whose frame is chosen by scroll progress         | The metaphor is photographic or physical (glass, liquid, a product, a place). Most likely how both references were made | Source footage or stills, `ffmpeg` to encode; an image or video generation service if nothing exists. Name them in the concept |
+| **C. Real-time WebGL**   | three.js via `@react-three/fiber` + `@react-three/drei`, or deck.gl when the world is real geography | Real refraction, true 3D the pointer can orbit, or geometry that must react live                                        | The library and any data it draws. Name them in the concept |
 
 Route B looks the most expensive and is often the cheapest: a four-second render does what a week of shader work does. Route C is only right when the object must respond live in ways a clip cannot.
+
+The libraries named in this table are examples, not requirements. Use whichever library, dataset or service fits the concept, including ones not listed here.
+
+"Nothing new" is not a reason to pick a route. The first Haulr build chose Route A to avoid new packages and came out as a flat diagram; the rebuild on deck.gl, with real state outlines and interstate data, was what the concept needed from the start.
 
 ## Scene container
 

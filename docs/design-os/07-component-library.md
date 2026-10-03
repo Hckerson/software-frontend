@@ -106,7 +106,7 @@ section headings are one level deeper than the page's `<h1>`.
 **Content rule:** `value` arrives pre-formatted as a string; zero is a value, never an empty
 state. **Don't:** let the counter's meaning depend on anything but its words.
 
-### `UsageMeter` — the hero interaction
+### `UsageMeter` — the core interaction
 
 **Purpose:** quota consumed against the plan limit. Principle 1 made concrete.
 **Inputs:** `label`, `unit`, `consumed`, `limit: number | null`, `icon?` (decorative).
@@ -382,3 +382,10 @@ it holds; `AuthCard` "the unauthenticated frame … the forms inside"; `LinkButt
 as"; `ConfirmDialog` "the page behind it"; the contents entry "the shell". `InputTemplate`'s
 `icon?` / `rightSection?` inputs were dropped from its contract as appearance-only, per the
 Inputs default above.
+
+**2026-10-02 presentational names.** Only a name changed; every contract and contract name
+survives unchanged.
+
+- Heading "`UsageMeter` — the hero interaction" → "`UsageMeter` — the core interaction" (anchor
+  `#usagemeter--the-hero-interaction` → `#usagemeter--the-core-interaction`; nothing linked to
+  it).

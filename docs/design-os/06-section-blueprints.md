@@ -166,7 +166,7 @@ string.
 
 `usage-summary` (blueprinted with [`dashboard/`](#dashboard--3-sections)) plus the six below.
 
-### `meter-row` — the hero interaction
+### `meter-row` — the core interaction
 
 **Purpose:** one usage reading per metered dimension — `API_CALLS`, `STORAGE_GB`, `SEATS`.
 **Data requirements:** none. Pure — takes `limits` and `usage` as props from `usage-summary`.
@@ -272,7 +272,7 @@ and status always reads as a word — principle 2, made structural by the
 [period](07-component-library.md#periodrange) and [status](07-component-library.md#statuspill)
 contracts.
 
-**`subscription-actions`** is the danger zone. Both actions confirm first; the cancel
+**`subscription-actions`** owns the two billing-state changes. Both actions confirm first; the cancel
 confirmation must tell the user that cancelling is reversible while the record exists. On
 success it invalidates the subscription, usage **and** invoice query keys together, because the
 backend changes all three in one transaction.
@@ -511,3 +511,13 @@ Dropped as visual prescription; no section, state or behaviour was removed.
   requirements); the `admin-plan-edit` Escape/focus behaviour (Accessibility requirements);
   the invoice ownership rule (Technical notes). Auth input validation against
   `lib/validations/` (from the `FormField` contract) is now stated under the auth Error states.
+
+**2026-10-02 presentational names.** Only names changed; no section, state, rule, known gap or
+reuse edge was removed, and every section file name is unchanged.
+
+- Heading "`meter-row` — the hero interaction" → "`meter-row` — the core interaction" (anchor
+  `#meter-row--the-hero-interaction` → `#meter-row--the-core-interaction`; nothing linked to it).
+- `subscription-actions` "is the danger zone" → "owns the two billing-state changes".
+- Kept: `plan-card`, `landing-hero`, `issue-invoice-button`, `account-status-button`,
+  `invoice-table`, `payment-method-row`, `meter-row` and the other container-sounding names are
+  file names under `components/sections/`; each already states its job beside the identifier.
