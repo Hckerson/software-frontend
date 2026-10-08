@@ -6,15 +6,15 @@ description: >-
     film. Use for any landing page, marketing site, product launch page, hero
     section, "make it look like an Awwwards site", "not a template", "premium
     website", or when the user shares reference frames / URLs of a motion-heavy
-    site. Sits on top of elegant-ui (which still owns tokens, primitives and file
-    structure). Not for dashboards, forms or app screens.
+    site. Tokens, primitives and file structure stay with .claude/CLAUDE.md.
+    Not for dashboards, forms or app screens.
 ---
 
 # Cinematic Web
 
 A basic site is what happens when code starts before a concept exists. This skill forces the concept, the scene score and the technique to exist first, builds against them, then checks the result against them.
 
-Load `elegant-ui` alongside this. It owns vocabulary and structure; this skill owns the visual register.
+Read `.claude/CLAUDE.md` alongside this. It owns vocabulary and structure; this skill owns the visual register.
 
 ## The standard
 
@@ -58,7 +58,7 @@ Three candidate hero objects. For each: the object, the product truth it express
 
 ### 5. Build
 
-Follow `techniques.md` for the mechanics and `elegant-ui` for structure. One shared scroll-progress value drives hero and copy. All copy is real DOM text. The canvas or video is `aria-hidden`. `prefers-reduced-motion` gets a composed still of the peak scene; no WebGL or decode support gets a poster image.
+Follow `techniques.md` for the mechanics and `.claude/CLAUDE.md` for structure. One shared scroll-progress value drives hero and copy. All copy is real DOM text. The canvas or video is `aria-hidden`. `prefers-reduced-motion` gets a composed still of the peak scene; no WebGL or decode support gets a poster image.
 
 ### 6. Verify
 
