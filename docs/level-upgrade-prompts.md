@@ -84,7 +84,6 @@ Simple, minimal, {{REGISTER}}: think {{REFERENCES}}.
 ## Done means
 
 Components untouched, all checks green, contrast table included, screenshots attached,
-the elegant-ui skill updated if any class or token it documents changed,
 and a short list of follow-ups for level 1.
 ```
 
@@ -109,7 +108,7 @@ Simple, minimal, {{REGISTER}}: think {{REFERENCES}}.
 
 ## Ground rules (non-negotiable)
 
-- Follow `.claude/CLAUDE.md` and load the `elegant-ui` skill before touching JSX.
+- Follow `.claude/CLAUDE.md` before touching JSX.
 - Only house tokens and classes: no hex, no stock Tailwind palette, no bracketed values,
   no breakpoint prefixes in className (the lint rules enforce this).
 - Colour pairs come from {{TONES}}. Never hand-write `bg-X-light text-X`.
@@ -153,8 +152,8 @@ Known work:
   than wrong on light.
 - Check every size variant against the density rules, which allow `text-sm` only for input
   value text.
-- Where the elegant-ui skill references primitives that do not exist, or a composition
-  hand-rolls one (inputs, fields), propose (don't build yet) the primitive for level 2 to adopt.
+- Where a composition hand-rolls a primitive that does not exist yet (inputs, fields),
+  propose (don't build yet) the primitive for level 2 to adopt.
 - Only build a new primitive (delta chip, status dot, meter variant) if a level 2 component
   needs it; name the consumer.
   {{NOTES}}
